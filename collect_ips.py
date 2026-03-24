@@ -17,6 +17,132 @@ ip_pattern = re.compile(
     r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
 )
 
+# Cloudflare 机房代码 → 中文名称
+colo_map = {
+    "HKG": "中国香港",
+    "LAX": "美国洛杉矶",
+    "SJC": "美国圣何塞",
+    "SFO": "美国旧金山",
+    "LHR": "英国伦敦",
+    "CDG": "法国巴黎",
+    "SIN": "新加坡",
+    "NRT": "日本东京",
+    "KIX": "日本大阪",
+    "ICN": "韩国首尔",
+    "FRA": "德国法兰克福",
+    "AMS": "荷兰阿姆斯特丹",
+    "MAD": "西班牙马德里",
+    "FCO": "意大利罗马",
+    "SYD": "澳大利亚悉尼",
+    "MEL": "澳大利亚墨尔本",
+    "YYZ": "加拿大多伦多",
+    "BKK": "泰国曼谷",
+    "KUL": "马来西亚吉隆坡",
+    "MNL": "菲律宾马尼拉",
+    "CGK": "印尼雅加达",
+    "DEL": "印度新德里",
+    "GRU": "巴西圣保罗",
+    "JNB": "南非约翰内斯堡",
+    "DME": "俄罗斯莫斯科",
+    "BER": "德国柏林",
+    "OSL": "挪威奥斯陆",
+    "ARN": "瑞典斯德哥尔摩",
+    "CPH": "丹麦哥本哈根",
+    "HEL": "芬兰赫尔辛基",
+    "ZRH": "瑞士苏黎世",
+    "VIE": "奥地利维也纳",
+    "PRG": "捷克布拉格",
+    "WAW": "波兰华沙",
+    "BUD": "匈牙利布达佩斯",
+    "SOF": "保加利亚索非亚",
+    "ATH": "希腊雅典",
+    "IST": "土耳其伊斯坦布尔",
+    "TLV": "以色列特拉维夫",
+    "DXB": "阿联酋迪拜",
+    "AUH": "阿联酋阿布扎比",
+    "DOH": "卡塔尔多哈",
+    "KWI": "科威特科威特城",
+    "RUH": "沙特利雅得",
+    "MCT": "阿曼马斯喀特",
+    "KRT": "苏丹喀土穆",
+    "CAI": "埃及开罗",
+    "LOS": "尼日利亚拉各斯",
+    "ABV": "尼日利亚阿布贾",
+    "DKR": "塞内加尔达喀尔",
+    "CMN": "摩洛哥卡萨布兰卡",
+    "ALG": "阿尔及利亚阿尔及尔",
+    "TUN": "突尼斯突尼斯市",
+    "MRU": "毛里求斯路易港",
+    "SEZ": "塞舌尔维多利亚",
+    "GIG": "巴西里约热内卢",
+    "BUE": "阿根廷布宜诺斯艾利斯",
+    "SCL": "智利圣地亚哥",
+    "LIM": "秘鲁利马",
+    "PTY": "巴拿马巴拿马城",
+    "MEX": "墨西哥墨西哥城",
+    "YVR": "加拿大温哥华",
+    "YUL": "加拿大蒙特利尔",
+    "SEA": "美国西雅图",
+    "ORD": "美国芝加哥",
+    "DFW": "美国达拉斯",
+    "IAH": "美国休斯顿",
+    "JFK": "美国纽约",
+    "EWR": "美国纽瓦克",
+    "MIA": "美国迈阿密",
+    "ATL": "美国亚特兰大",
+    "DEN": "美国丹佛",
+    "LAS": "美国拉斯维加斯",
+    "PHX": "美国菲尼克斯",
+    "SAN": "美国圣地亚哥",
+    "PDX": "美国波特兰",
+    "MSP": "美国明尼阿波利斯",
+    "DTW": "美国底特律",
+    "CLE": "美国克利夫兰",
+    "PIT": "美国匹兹堡",
+    "STL": "美国圣路易斯",
+    "MCI": "美国堪萨斯城",
+    "DCA": "美国华盛顿",
+    "BWI": "美国巴尔的摩",
+    "IAD": "美国杜勒斯",
+    "BOS": "美国波士顿",
+    "PHL": "美国费城",
+    "CLT": "美国夏洛特",
+    "MCO": "美国奥兰多",
+    "TPA": "美国坦帕",
+    "RSW": "美国迈尔斯堡",
+    "FLL": "美国劳德代尔堡",
+    "HNL": "美国檀香山",
+    "OGG": "美国卡胡卢伊",
+    "KOA": "美国科纳",
+    "LIH": "美国利胡埃",
+    "GUM": "关岛",
+    "SPN": "塞班岛",
+    "TPE": "中国台北",
+    "KHH": "中国高雄",
+    "SZX": "中国深圳",
+    "PVG": "中国上海",
+    "PEK": "中国北京",
+    "CAN": "中国广州",
+    "CTU": "中国成都",
+    "CKG": "中国重庆",
+    "WUH": "中国武汉",
+    "XMN": "中国厦门",
+    "HGH": "中国杭州",
+    "NBO": "肯尼亚内罗毕",
+    "CJB": "印度科因巴托尔",
+    "CCU": "印度加尔各答",
+    "BOM": "印度孟买",
+    "MAA": "印度金奈",
+    "BLR": "印度班加罗尔",
+    "KTM": "尼泊尔加德满都",
+    "DAC": "孟加拉国达卡",
+    "RGN": "缅甸仰光",
+    "PNH": "柬埔寨金边",
+    "VTE": "老挝万象",
+    "HAN": "越南河内",
+    "SGN": "越南胡志明市",
+}
+
 unique_ips = set()
 
 headers = {
@@ -31,15 +157,13 @@ for url in urls:
         ips = ip_pattern.findall(resp.text)
         unique_ips.update(ips)
         print(f"  → 找到 {len(ips)} 个，累计去重后 {len(unique_ips)}")
-    except:
+    except Exception as e:
+        print(f"  → 失败: {e}")
         continue
 
-# -----------------------
-# 【稳定可用】CF 机房查询
-# -----------------------
+# 获取 CF 官方机房代码
 def get_cf_colocate(ip):
     try:
-        # 访问 CF 官方测速页面，获取 colo 代码
         url = f"http://{ip}/cdn-cgi/trace"
         r = requests.get(url, timeout=3, headers=headers)
         for line in r.text.splitlines():
@@ -49,17 +173,18 @@ def get_cf_colocate(ip):
         pass
     return ""
 
-# 拼接 IP + #机房
+# 生成 IP + 中文地区
 result = []
 for ip in unique_ips:
     colo = get_cf_colocate(ip)
-    if colo:
-        result.append(f"{ip} #{colo}")
+    location = colo_map.get(colo, colo) if colo else ""
+    if location:
+        result.append(f"{ip} #{location}")
     else:
         result.append(ip)
-    time.sleep(0.1)  # 防过快
+    time.sleep(0.1)
 
-# 排序
+# 按IP排序
 result = sorted(result, key=lambda x: x.split()[0])
 
 # 写入文件
@@ -71,4 +196,4 @@ with open(csv_file, "w", encoding="utf-8") as f:
     for line in result:
         f.write(f"{line}\n")
 
-print(f"\n✅ 完成！共保存 {len(result)} 条（IP+地区代码）")
+print(f"\n✅ 完成！共保存 {len(result)} 条（IP+中文地区）")
