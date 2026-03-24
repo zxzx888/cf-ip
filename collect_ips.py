@@ -1,56 +1,76 @@
 import requests
-from bs4 import BeautifulSoup
 import re
 import os
-import requests
+import time
 
-# 目标URL列表
+# 要抓取的 IP 源
 urls = [
-    'https://ip.164746.xyz', 
-    'https://cf.090227.xyz', 
-    'https://stock.hostmonit.com/CloudFlareYes',
+    'https://ip.164746.xyz',
+    'https://cf.090227.xyz/ct?ips=10',
+    'https://cf.090227.xyz/CloudFlareYes',
     'https://www.wetest.vip/page/cloudflare/address_v4.html'
 ]
 
-# 正则表达式用于匹配IP地址
-ip_pattern = r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'
+# 严格匹配 IPv4
+ip_pattern = re.compile(
+    r'\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'
+    r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'
+    r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'
+    r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
+)
 
-# 检查CloudflareSpeedTest.csv文件是否存在,如果存在则删除它
-if os.path.exists('CloudflareSpeedTest.csv'):
-    os.remove('CloudflareSpeedTest.csv')
-
-# 使用集合存储IP地址实现自动去重
 unique_ips = set()
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+}
 
+# 抓取 IP
 for url in urls:
-    try:
-        # 发送HTTP请求获取网页内容
-        response = requests.get(url, timeout=5)
-        
-        # 确保请求成功
-        if response.status_code == 200:
-            # 获取网页的文本内容
-            html_content = response.text
-            
-            # 使用正则表达式查找IP地址
-            ip_matches = re.findall(ip_pattern, html_content, re.IGNORECASE)
-            
-            # 将找到的IP添加到集合中（自动去重）
-            unique_ips.update(ip_matches)
-    except requests.exceptions.RequestException as e:
-        print(f'请求 {url} 失败: {e}')
-        continue
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            print(f"正在抓取: {url}")
+            resp = requests.get(url, headers=headers, timeout=20)
+            resp.raise_for_status()
+            ips = ip_pattern.findall(resp.text)
+            unique_ips.update(ips)
+            print(f"  → 找到 {len(ips)} 个，累计去重后 {len(unique_ips)}")
+            break
+        except Exception as e:
+            print(f"  → 失败: {e}")
+            time.sleep(2)
+    else:
+        print(f"❌ {url} 最终失败")
 
-# 将去重后的IP地址按数字顺序排序后写入文件
-if unique_ips:
-    # 按IP地址的数字顺序排序（非字符串顺序）
-    sorted_ips = sorted(unique_ips, key=lambda ip: [int(part) for part in ip.split('.')])
-    
-    with open('CloudflareSpeedTest.csv', 'w') as file:
-        # 添加标题行
-        file.write('ip\n')  # 使用标准的CSV列名
-        for ip in sorted_ips:
-            file.write(f'{ip}\n')  # 确保每行只有IP地址，符合CSV格式
-    print(f'已保存 {len(sorted_ips)} 个唯一IP地址到CloudflareSpeedTest.csv文件。')
-else:
-    print('未找到有效的IP地址。')
+# 查询 Cloudflare 机房代码
+def get_cf_colo(ip):
+    try:
+        r = requests.get(f"http://ip.vercel.app/api/{ip}", timeout=5)
+        data = r.json()
+        return data.get("colo", "").strip().upper()
+    except:
+        return ""
+
+# 生成最终列表
+ip_with_colo = []
+for ip in unique_ips:
+    colo = get_cf_colo(ip)
+    if colo:
+        ip_with_colo.append(f"{ip} #{colo}")
+    else:
+        ip_with_colo.append(ip)
+    time.sleep(0.2)  # 防止接口超限
+
+# 排序
+ip_with_colo.sort()
+
+# 写入文件
+csv_file = "CloudflareSpeedTest.csv"
+if os.path.exists(csv_file):
+    os.remove(csv_file)
+
+with open(csv_file, "w", encoding="utf-8") as f:
+    for line in ip_with_colo:
+        f.write(f"{line}\n")
+
+print(f"\n✅ 完成！共保存 {len(ip_with_colo)} 条（IP+地区代码）")
