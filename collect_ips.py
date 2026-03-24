@@ -17,7 +17,7 @@ ip_pattern = re.compile(
     r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
 )
 
-# Cloudflare 机房代码 → 中文名称
+# Cloudflare 机房标准中文映射
 colo_map = {
     "HKG": "中国香港",
     "LAX": "美国洛杉矶",
@@ -64,21 +64,7 @@ colo_map = {
     "KWI": "科威特科威特城",
     "RUH": "沙特利雅得",
     "MCT": "阿曼马斯喀特",
-    "KRT": "苏丹喀土穆",
     "CAI": "埃及开罗",
-    "LOS": "尼日利亚拉各斯",
-    "ABV": "尼日利亚阿布贾",
-    "DKR": "塞内加尔达喀尔",
-    "CMN": "摩洛哥卡萨布兰卡",
-    "ALG": "阿尔及利亚阿尔及尔",
-    "TUN": "突尼斯突尼斯市",
-    "MRU": "毛里求斯路易港",
-    "SEZ": "塞舌尔维多利亚",
-    "GIG": "巴西里约热内卢",
-    "BUE": "阿根廷布宜诺斯艾利斯",
-    "SCL": "智利圣地亚哥",
-    "LIM": "秘鲁利马",
-    "PTY": "巴拿马巴拿马城",
     "MEX": "墨西哥墨西哥城",
     "YVR": "加拿大温哥华",
     "YUL": "加拿大蒙特利尔",
@@ -87,7 +73,6 @@ colo_map = {
     "DFW": "美国达拉斯",
     "IAH": "美国休斯顿",
     "JFK": "美国纽约",
-    "EWR": "美国纽瓦克",
     "MIA": "美国迈阿密",
     "ATL": "美国亚特兰大",
     "DEN": "美国丹佛",
@@ -100,41 +85,26 @@ colo_map = {
     "CLE": "美国克利夫兰",
     "PIT": "美国匹兹堡",
     "STL": "美国圣路易斯",
-    "MCI": "美国堪萨斯城",
-    "DCA": "美国华盛顿",
-    "BWI": "美国巴尔的摩",
-    "IAD": "美国杜勒斯",
-    "BOS": "美国波士顿",
-    "PHL": "美国费城",
-    "CLT": "美国夏洛特",
     "MCO": "美国奥兰多",
     "TPA": "美国坦帕",
-    "RSW": "美国迈尔斯堡",
     "FLL": "美国劳德代尔堡",
     "HNL": "美国檀香山",
-    "OGG": "美国卡胡卢伊",
-    "KOA": "美国科纳",
-    "LIH": "美国利胡埃",
     "GUM": "关岛",
-    "SPN": "塞班岛",
-    "TPE": "中国台北",
+    "TPE": "中国台湾",
     "KHH": "中国高雄",
-    "SZX": "中国深圳",
-    "PVG": "中国上海",
-    "PEK": "中国北京",
-    "CAN": "中国广州",
-    "CTU": "中国成都",
-    "CKG": "中国重庆",
-    "WUH": "中国武汉",
-    "XMN": "中国厦门",
+    "PEK": "北京",
+    "PVG": "上海",
+    "CAN": "广州",
+    "SZX": "深圳",
+    "CTU": "成都",
+    "CKG": "重庆",
+    "WUH": "武汉",
+    "XMN": "厦门",
     "HGH": "中国杭州",
     "NBO": "肯尼亚内罗毕",
-    "CJB": "印度科因巴托尔",
-    "CCU": "印度加尔各答",
     "BOM": "印度孟买",
     "MAA": "印度金奈",
     "BLR": "印度班加罗尔",
-    "KTM": "尼泊尔加德满都",
     "DAC": "孟加拉国达卡",
     "RGN": "缅甸仰光",
     "PNH": "柬埔寨金边",
@@ -179,7 +149,7 @@ for ip in unique_ips:
     colo = get_cf_colocate(ip)
     location = colo_map.get(colo, colo) if colo else ""
     if location:
-        result.append(f"{ip} #{location}")
+        result.append(f"{ip}  #{location}")
     else:
         result.append(ip)
     time.sleep(0.1)
@@ -196,4 +166,4 @@ with open(csv_file, "w", encoding="utf-8") as f:
     for line in result:
         f.write(f"{line}\n")
 
-print(f"\n✅ 完成！共保存 {len(result)} 条（IP+中文地区）")
+print(f"\n✅ 完成！共保存 {len(result)} 条（IP+中文地区，已空格分隔）")
