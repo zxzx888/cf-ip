@@ -5,8 +5,8 @@ import time
 
 urls = [
     'https://ip.164746.xyz',
-    'https://cf.090227.xyz/ct?ips=10',
-    'https://cf.090227.xyz/CloudFlareYes',
+    'https://cf.0.227.xyz/ct?ips=10',
+    'https://cf.0.227.xyz/CloudFlareYes',
     'https://www.wetest.vip/page/cloudflare/address_v4.html'
 ]
 
@@ -27,48 +27,24 @@ headers = {
 for url in urls:
     try:
         print(f"正在抓取: {url}")
-        resp = requests.get(url, headers=headers, timeout=15)
+        resp = requests.get(url, headers=headers, timeout=10)
         ips = ip_pattern.findall(resp.text)
         unique_ips.update(ips)
         print(f"  → 找到 {len(ips)} 个，累计去重后 {len(unique_ips)}")
-    except:
+    except Exception as e:
+        print(f"  → 抓取失败")
         continue
 
-# -----------------------
-# 【稳定可用】CF 机房查询
-# -----------------------
-def get_cf_colocate(ip):
-    try:
-        # 访问 CF 官方测速页面，获取 colo 代码
-        url = f"http://{ip}/cdn-cgi/trace"
-        r = requests.get(url, timeout=3, headers=headers)
-        for line in r.text.splitlines():
-            if line.startswith("colo="):
-                return line.split("=")[1].strip().upper()
-    except:
-        pass
-    return ""
+# 按IP排序
+result = sorted(unique_ips)
 
-# 拼接 IP + #机房
-result = []
-for ip in unique_ips:
-    colo = get_cf_colocate(ip)
-    if colo:
-        result.append(f"{ip} #{colo}")
-    else:
-        result.append(ip)
-    time.sleep(0.1)  # 防过快
-
-# 排序
-result = sorted(result, key=lambda x: x.split()[0])
-
-# 写入文件
+# 写入文件（纯IP，每行一个）
 csv_file = "CloudflareSpeedTest.csv"
 if os.path.exists(csv_file):
     os.remove(csv_file)
 
 with open(csv_file, "w", encoding="utf-8") as f:
-    for line in result:
-        f.write(f"{line}\n")
+    for ip in result:
+        f.write(f"{ip}\n")
 
-print(f"\n✅ 完成！共保存 {len(result)} 条（IP+地区代码）")
+print(f"\n✅ 完成！共保存 {len(result)} 个纯IP")
