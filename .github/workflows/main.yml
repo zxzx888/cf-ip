@@ -41,7 +41,7 @@ jobs:
           git config --local user.name "GitHub Action"
           if [ -n "$(git status --porcelain)" ]; then
             git add CloudflareSpeedTest.csv
-            git commit -m "Auto update IP list"
+            git commit -m "Automatic IP list update [$(date '+%Y-%m-%d %H:%M:%S')]"
             git push
           else
             echo "No changes, skip commit."
