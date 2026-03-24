@@ -3,10 +3,9 @@ import re
 import os
 import time
 
-urls = [
-    'https://ip.164746.xyz',
-    'https://cf.0.227.xyz/ct?ips=10',
-    'https://cf.0.227.xyz/CloudFlareYes',
+urls = ['https://ip.164746.xyz',
+    'https://cf.090227.xyz/ct?ips=10',
+    'https://cf.090227.xyz/CloudFlareYes',
     'https://www.wetest.vip/page/cloudflare/address_v4.html'
 ]
 
