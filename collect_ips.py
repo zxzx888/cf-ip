@@ -7,6 +7,7 @@ urls = ['https://ip.164746.xyz',
     'https://cf.090227.xyz/ct?ips=20',
     'https://cf.090227.xyz/CloudFlareYes',
     'https://www.wetest.vip/page/cloudflare/address_v4.html'
+    'https://ipdb.api.030101.xyz/?type=bestcf'
 ]
 
 ip_pattern = re.compile(
