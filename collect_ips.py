@@ -69,12 +69,12 @@ def main():
 
     for ip in sorted_ips:
         country = get_ip_country(ip)
-        ip_results.append(f"{ip}\t{country}")
+        ip_results.append(f"{ip}#{country}")
         if get_subnet(ip) not in subnet_cache:
             time.sleep(0.2)
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        f.write("IP地址\t地理位置\n")
+        
         f.write("\n".join(ip_results))
 
 if __name__ == "__main__":
