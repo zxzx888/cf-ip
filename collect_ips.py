@@ -38,11 +38,17 @@ def get_country(ip):
         return subnet_cache[subnet]
 
     print(f"  🌍 查询网段: {subnet}")
-    try:
-        # 第三方接口：ipapi.co
-        resp = requests.get(f"https://ipapi.co/{ip}/json/", headers=headers, timeout=10)
-        data = resp.json()
-        cc = data.get("country_code", "Unknown")
+       try:
+        # 严格使用你指定的接口
+        url = f"https://ipwhois.app/json/{ip}"
+        res = requests.get(url, headers=headers, timeout=10)
+        data = res.json()
+
+        # 接口返回成功才取国家码
+        if data.get("success"):
+            cc = data.get("country_code", "Unknown")
+        else:
+            cc = "Unknown"
     except:
         cc = "Unknown"
 
