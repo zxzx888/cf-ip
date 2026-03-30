@@ -3,7 +3,6 @@ import re
 import os
 import time
 
-
 urls = [
     'https://ip.164746.xyz',
     'https://cf.090227.xyz/ct?ips=10',
@@ -12,7 +11,6 @@ urls = [
     'https://ipdb.api.030101.xyz/?type=bestcf',
     'https://api.uouin.com/cloudflare.html'
 ]
-
 
 ip_pattern = re.compile(
     r'\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'
@@ -27,26 +25,24 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 }
 
-
+# ===================== 第三方API查询=====================
 subnet_cache = {}
 
 def get_subnet(ip):
-    """提取IP前两段作为分组（192.168.xx.xx → 192.168）"""
     parts = ip.split(".")
     return f"{parts[0]}.{parts[1]}"
 
 def get_country(ip):
-    """优化：同一网段只联网查询一次，无冗余逻辑"""
     subnet = get_subnet(ip)
     if subnet in subnet_cache:
         return subnet_cache[subnet]
 
-  
     print(f"  🌍 查询网段: {subnet}")
     try:
-        res = requests.get(f"http://ip-api.com/json/{ip}", headers=headers, timeout=8)
-        data = res.json()
-        cc = data.get("countryCode", "Unknown") if data.get("status") == "success" else "Unknown"
+        # 第三方接口：ipapi.co
+        resp = requests.get(f"https://ipapi.co/{ip}/json/", headers=headers, timeout=10)
+        data = resp.json()
+        cc = data.get("country_code", "Unknown")
     except:
         cc = "Unknown"
 
@@ -54,7 +50,6 @@ def get_country(ip):
     return cc
 
 def clean_ip(ip_str):
-    """优化：极简合法IP校验，过滤无效值"""
     ip_str = ip_str.strip()
     parts = ip_str.split(".")
     if len(parts) != 4:
@@ -65,7 +60,7 @@ def clean_ip(ip_str):
     except:
         pass
     return None
-
+# ====================================================================
 
 # ====================================================================
 for url in urls:
@@ -81,19 +76,16 @@ for url in urls:
         continue
 # ====================================================================
 
-# 排序
 result = sorted(unique_ips)
 
-# ===================== 批量查询国家码 =====================
 ip_output = []
 for ip in result:
     country = get_country(ip)
     ip_output.append(f"{ip}#{country}")
-    # 新网段才延迟，避免接口被封
+    # 新网段才延迟，防限流
     if get_subnet(ip) not in subnet_cache:
         time.sleep(0.2)
 
-# ===================== 写入文件（IP#国家码）=====================
 csv_file = "CloudflareSpeedTest.csv"
 if os.path.exists(csv_file):
     os.remove(csv_file)
@@ -101,4 +93,4 @@ if os.path.exists(csv_file):
 with open(csv_file, "w", encoding="utf-8") as f:
     f.write("\n".join(ip_output))
 
-print(f"\n✅ 完成！共保存 {len(ip_output)} 个IP，格式：IP#国家码")
+print(f"\n✅ 完成！共保存 {len(ip_output)} 个IP")
