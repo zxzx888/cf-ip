@@ -74,8 +74,7 @@ def main():
             time.sleep(0.2)
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        f.write("IP地址,地区码\n")
-        f.write("\n".join(lines))
+         f.write("\n".join(lines))
 
 if __name__ == "__main__":
     main()
