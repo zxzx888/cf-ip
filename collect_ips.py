@@ -4,12 +4,13 @@ import time
 
 URLS = [
     "https://ip.164746.xyz",
-    "https://cf.0.22.xyz/ct?ips=10",
-    "https://cf.0.22.xyz/CloudFlareYes",
+    "https://cf.090227.xyz/ct?ips=10",
+    "https://cf.090227.xyz/CloudFlareYes",
     "https://www.wetest.vip/page/cloudflare/address_v4.html",
     "https://ipdb.api.030101.xyz/?type=bestcf",
     "https://api.uouin.com/cloudflare.html"
 ]
+
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 OUTPUT_FILE = "CloudflareSpeedTest.csv"
 
@@ -25,11 +26,10 @@ def get_ip_country(ip):
     if subnet in subnet_cache:
         return subnet_cache[subnet]
 
-    print(f"  🌍 查询网段: {subnet}")
-
+    print(f"🌍 查询网段: {subnet}")
     try:
         url = f"http://ip-api.com/json/{ip}"
-        res = requests.get(url, timeout=10, headers=HEADERS)
+        res = requests.get(url, timeout=8, headers=HEADERS)
         data = res.json()
         if data.get("status") == "success":
             cc = data.get("countryCode", "Unknown")
@@ -65,17 +65,17 @@ def main():
         return
 
     sorted_ips = sorted(unique_ips)
-    ip_results = []
+    lines = []
 
     for ip in sorted_ips:
-        country = get_ip_country(ip)
-        ip_results.append(f"{ip}\t{country}")
+        cc = get_ip_country(ip)
+        lines.append(f"{ip},{cc}")
         if get_subnet(ip) not in subnet_cache:
             time.sleep(0.2)
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        f.write("IP地址\t地理位置\n")
-        f.write("\n".join(ip_results))
+        f.write("IP地址,地理位置\n")
+        f.write("\n".join(lines))
 
 if __name__ == "__main__":
     main()
