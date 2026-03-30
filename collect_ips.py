@@ -1,51 +1,81 @@
 import requests
 import re
-import os
 import time
 
-urls = ['https://ip.164746.xyz',
-    'https://cf.090227.xyz/ct?ips=10',
-    'https://cf.090227.xyz/CloudFlareYes',
-    'https://www.wetest.vip/page/cloudflare/address_v4.html',
-    'https://ipdb.api.030101.xyz/?type=bestcf',
-    'https://api.uouin.com/cloudflare.html'
+URLS = [
+    "https://ip.164746.xyz",
+    "https://cf.0.22.xyz/ct?ips=10",
+    "https://cf.0.22.xyz/CloudFlareYes",
+    "https://www.wetest.vip/page/cloudflare/address_v4.html",
+    "https://ipdb.api.030101.xyz/?type=bestcf",
+    "https://api.uouin.com/cloudflare.html"
 ]
+HEADERS = {"User-Agent": "Mozilla/5.0"}
+OUTPUT_FILE = "CloudflareSpeedTest.csv"
 
-ip_pattern = re.compile(
-    r'\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'
-    r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'
-    r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'
-    r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b'
-)
+ip_pattern = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
+subnet_cache = {}
 
-unique_ips = set()
+def get_subnet(ip):
+    parts = ip.split(".")
+    return f"{parts[0]}.{parts[1]}"
 
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-}
+def get_ip_country(ip):
+    subnet = get_subnet(ip)
+    if subnet in subnet_cache:
+        return subnet_cache[subnet]
 
-# 抓取 IP
-for url in urls:
+    print(f"  🌍 查询网段: {subnet}")
+
     try:
-        print(f"正在抓取: {url}")
-        resp = requests.get(url, headers=headers, timeout=10)
-        ips = ip_pattern.findall(resp.text)
-        unique_ips.update(ips)
-        print(f"  → 找到 {len(ips)} 个，累计去重后 {len(unique_ips)}")
-    except Exception as e:
-        print(f"  → 抓取失败")
-        continue
+        url = f"http://ip-api.com/json/{ip}"
+        res = requests.get(url, timeout=10, headers=HEADERS)
+        data = res.json()
+        if data.get("status") == "success":
+            cc = data.get("countryCode", "Unknown")
+            subnet_cache[subnet] = cc
+            return cc
+    except:
+        pass
 
-# 按IP排序
-result = sorted(unique_ips)
+    subnet_cache[subnet] = "Unknown"
+    return "Unknown"
 
-# 写入文件（纯IP，每行一个）
-csv_file = "CloudflareSpeedTest.csv"
-if os.path.exists(csv_file):
-    os.remove(csv_file)
+def clean_ip(ip_str):
+    ip_str = ip_str.strip()
+    pattern = r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$"
+    if re.match(pattern, ip_str):
+        parts = ip_str.split(".")
+        if all(0 <= int(p) <= 255 for p in parts):
+            return ip_str
+    return None
 
-with open(csv_file, "w", encoding="utf-8") as f:
-    for ip in result:
-        f.write(f"{ip}\n")
+def main():
+    unique_ips = set()
+    for url in URLS:
+        try:
+            resp = requests.get(url, headers=HEADERS, timeout=10)
+            ips = ip_pattern.findall(resp.text)
+            valid_ips = [clean_ip(ip) for ip in ips if clean_ip(ip)]
+            unique_ips.update(valid_ips)
+        except Exception:
+            continue
 
-print(f"\n✅ 完成！共保存 {len(result)} 个纯IP")
+    if not unique_ips:
+        return
+
+    sorted_ips = sorted(unique_ips)
+    ip_results = []
+
+    for ip in sorted_ips:
+        country = get_ip_country(ip)
+        ip_results.append(f"{ip}\t{country}")
+        if get_subnet(ip) not in subnet_cache:
+            time.sleep(0.2)
+
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        f.write("IP地址\t地理位置\n")
+        f.write("\n".join(ip_results))
+
+if __name__ == "__main__":
+    main()
