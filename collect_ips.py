@@ -3,6 +3,7 @@ import re
 import os
 import time
 
+
 urls = [
     'https://ip.164746.xyz',
     'https://cf.090227.xyz/ct?ips=10',
@@ -26,7 +27,7 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
 }
 
-# ===================== 优化：网段缓存（只查一次）=====================
+
 subnet_cache = {}
 
 def get_subnet(ip):
@@ -40,7 +41,8 @@ def get_country(ip):
     if subnet in subnet_cache:
         return subnet_cache[subnet]
 
-    # 只在第一次遇到该网段时请求
+  
+    print(f"  🌍 查询网段: {subnet}")
     try:
         res = requests.get(f"http://ip-api.com/json/{ip}", headers=headers, timeout=8)
         data = res.json()
@@ -65,6 +67,7 @@ def clean_ip(ip_str):
     return None
 
 
+# ====================================================================
 for url in urls:
     try:
         print(f"正在抓取: {url}")
@@ -76,22 +79,21 @@ for url in urls:
     except Exception as e:
         print(f"  → 抓取失败")
         continue
-
+# ====================================================================
 
 # 排序
 result = sorted(unique_ips)
 
 # ===================== 批量查询国家码 =====================
 ip_output = []
-for idx, ip in enumerate(result):
+for ip in result:
     country = get_country(ip)
     ip_output.append(f"{ip}#{country}")
-    
-    # 优化：只对新网段延迟，避免接口被封
-    if idx == 0 or get_subnet(ip) not in subnet_cache:
-        time.sleep(0.15)
+    # 新网段才延迟，避免接口被封
+    if get_subnet(ip) not in subnet_cache:
+        time.sleep(0.2)
 
-# ===================== 写入文件=====================
+# ===================== 写入文件（IP#国家码）=====================
 csv_file = "CloudflareSpeedTest.csv"
 if os.path.exists(csv_file):
     os.remove(csv_file)
@@ -99,4 +101,4 @@ if os.path.exists(csv_file):
 with open(csv_file, "w", encoding="utf-8") as f:
     f.write("\n".join(ip_output))
 
-print(f"\n✅ 抓取完成！共保存 {len(ip_output)} 个IP，格式：IP#国家码")
+print(f"\n✅ 完成！共保存 {len(ip_output)} 个IP，格式：IP#国家码")
