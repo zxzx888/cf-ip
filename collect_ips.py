@@ -12,7 +12,7 @@ URLS = [
 ]
 
 HEADERS = {"User-Agent": "Mozilla/5.0"}
-OUTPUT_FILE = "CloudflareSpeedTest.csv"
+OUTPUT_FILE = "CloudflareSpeedTest.txt"
 
 ip_pattern = re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b")
 subnet_cache = {}
@@ -69,12 +69,13 @@ def main():
 
     for ip in sorted_ips:
         cc = get_ip_country(ip)
-        lines.append(f"{ip},{cc}")
+        lines.append(f"{ip},443,{cc}")
         if get_subnet(ip) not in subnet_cache:
             time.sleep(0.2)
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-         f.write("\n".join(lines))
+        f.write("IP地址,端口,地理位置\n")
+        f.write("\n".join(lines))
 
 if __name__ == "__main__":
     main()
