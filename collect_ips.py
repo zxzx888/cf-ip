@@ -69,7 +69,7 @@ ip_results = []
 for ip in result:
     source_url = ip_source_map[ip]
     alias = name_map.get(source_url, "unknown")
-    ip_results.append(f"{ip}#{alias}优选")
+    ip_results.append(f"{ip}#【{alias}优选】")
 
 # 写入文件
 csv_file = "CloudflareSpeedTest.csv"
