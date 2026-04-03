@@ -14,12 +14,12 @@ urls = [
 
 # 网址对应别名
 name_map = {
-    'https://ip.164746.xyz': '164746',
-    'https://cf.090227.xyz/ct?ips=10': 'cm',
+    'https://ip.164746.xyz': 'CFSpeedDNS',
+    'https://cf.090227.xyz/ct?ips=10': 'CM',
     'https://cf.090227.xyz/CloudFlareYes': 'CloudFlareYes',
-    'https://www.wetest.vip/page/cloudflare/address_v4.html': 'wetest',
-    'https://ipdb.api.030101.xyz/?type=bestcf': '030101',
-    'https://api.uouin.com/cloudflare.html': 'uouin'
+    'https://www.wetest.vip/page/cloudflare/address_v4.html': 'Wetest',
+    'https://ipdb.api.030101.xyz/?type=bestcf': 'Ipdb',
+    'https://api.uouin.com/cloudflare.html': 'Uouin'
 }
 
 ip_pattern = re.compile(
