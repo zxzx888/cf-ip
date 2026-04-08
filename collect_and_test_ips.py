@@ -141,14 +141,15 @@ def get_score(lat, speed):
     if lat >= 9999 or speed <= 0:
         return 0
 
-    # 改进后的速度评分（对数函数）
-    speed_score = min(40, 30 * math.log(speed + 1))
-
-    # 改进后的延迟评分（平方根衰减）
+    # 延迟评分（平方根函数，避免过度惩罚）
     lat_score = max(0, 60 - math.sqrt(lat) / 2)
 
-    # 总评分
-    score = speed_score + lat_score
+    # 速度评分（使用对数函数，避免速度贡献过大）
+    speed_score = min(40, 30 * math.log(speed + 1))
+
+    # 加权评分，延迟权重 60，速度权重 40
+    score = (speed_score * 0.4) + (lat_score * 0.6)
+
     return round(min(score, 100), 1)
 
 # ====================== 主流程 ======================
