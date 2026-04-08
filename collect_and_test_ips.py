@@ -3,6 +3,7 @@ import re
 import time
 import csv
 import random
+import math
 import signal
 
 # ====================== 配置 ======================
@@ -140,10 +141,15 @@ def get_score(lat, speed):
     if lat >= 9999 or speed <= 0:
         return 0
 
-    speed_score = min(speed * 4, 70)
-    lat_score = max(0, 30 - (lat / 20))
+    # 改进后的速度评分（对数函数）
+    speed_score = min(40, 30 * math.log(speed + 1))
 
-    return round(min(speed_score + lat_score, 100), 1)
+    # 改进后的延迟评分（平方根衰减）
+    lat_score = max(0, 60 - math.sqrt(lat) / 2)
+
+    # 总评分
+    score = speed_score + lat_score
+    return round(min(score, 100), 1)
 
 # ====================== 主流程 ======================
 def main():
