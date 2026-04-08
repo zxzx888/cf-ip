@@ -1,0 +1,30 @@
+name: Auto Test IP
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - cf-ip
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./test  # 关键：指定在 test 文件夹运行
+        
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cf-ip  # 明确指定分支 cf-ip
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install requests
+        run: pip install requests
+
+      - name: Run IP Test
+        run: python testsp.py
