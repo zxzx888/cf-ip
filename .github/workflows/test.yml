@@ -1,21 +1,16 @@
 name: Auto IP Test
-
 on:
-  workflow_dispatch:    # 允许手动运行
-  push:
-    branches:
-      - test            # 只在 test 分支生效
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout test branch
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: test
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -23,11 +18,17 @@ jobs:
       - name: Install requests
         run: pip install requests
 
-      - name: Run test script
+      - name: Run Test
         run: python testsp.py
 
-      - name: Upload result
+      - name: Upload TXT
         uses: actions/upload-artifact@v4
         with:
           name: good_ips
           path: good_ips.txt
+
+      - name: Upload CSV
+        uses: actions/upload-artifact@v4
+        with:
+          name: good_ips_csv
+          path: good_ips.csv
