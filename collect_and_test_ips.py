@@ -144,11 +144,11 @@ def get_score(lat, speed):
     # 延迟评分（平方根函数，避免过度惩罚）
     lat_score = max(0, 60 - math.sqrt(lat) / 2)
 
-    # 速度评分（使用对数函数，避免速度贡献过大）
-    speed_score = min(40, 30 * math.log(speed + 1))
+    # 速度评分（修改对数函数，避免低速度评分过低）
+    speed_score = min(50, 40 * math.log(speed + 1))  # 提升最大速度分数
 
-    # 加权评分，延迟权重 60，速度权重 40
-    score = (speed_score * 0.4) + (lat_score * 0.6)
+    # 加权评分，延迟权重 65，速度权重 35
+    score = (speed_score * 0.35) + (lat_score * 0.65)
 
     return round(min(score, 100), 1)
 
