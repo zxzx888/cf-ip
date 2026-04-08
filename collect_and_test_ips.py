@@ -250,7 +250,6 @@ def generate_output_files(sorted_ips):
             ip_str,          # IP组合
             ip,              # 纯IP
             alias,           # 数据源别名
-            source_url,      # 数据源URL
             latency,         # 延迟(ms)
             jitter,          # 抖动(ms)
             speed,           # 速度(Mbps)
@@ -264,7 +263,7 @@ def generate_output_files(sorted_ips):
     with open(report_file, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
         # 写入表头
-        writer.writerow(["IP组合", "纯IP", "数据源别名", "数据源URL", "延迟(ms)", "抖动(ms)", "速度(Mbps)", "状态"])
+        writer.writerow(["IP组合", "纯IP", "数据源别名", "延迟(ms)", "抖动(ms)", "速度(Mbps)", "状态"])
         writer.writerows(report_data)
     print(f"✅ ip_test_report.csv 已生成 | 包含全部 {len(report_data)} 个IP的测试数据")
     
