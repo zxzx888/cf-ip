@@ -14,7 +14,7 @@ permissions:
 jobs:
   update-ip-list:
     runs-on: ubuntu-latest
-    timeout-minutes: 30   # ✅ 防卡死
+    timeout-minutes: 30   # 防止卡死
 
     steps:
       - name: 📥 拉取代码
@@ -24,7 +24,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'   # ✅ 缓存依赖
+          cache: 'pip'   # 缓存依赖
 
       - name: 📦 安装依赖
         run: pip install requests
@@ -47,13 +47,17 @@ jobs:
 
           git add CloudflareSpeedTest.csv ip_test_report.csv
 
+          # 检查是否有变化
           if git diff --staged --quiet; then
-            echo "No changes"
+            echo "没有变化，跳过提交"
             exit 0
           fi
 
+          # 提交更改
           git commit -m "Auto update [$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M')]"
 
-          # ✅ 防冲突
+          # 拉取最新代码，避免冲突（如果有冲突，则会自动合并）
           git pull --rebase origin main || true
+
+          # 推送更改
           git push origin HEAD:main
