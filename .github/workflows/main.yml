@@ -14,19 +14,19 @@ permissions:
 jobs:
   update-ip-list:
     runs-on: ubuntu-latest
-    timeout-minutes: 30   # 防止卡死
+    timeout-minutes: 30
 
     steps:
       - name: 📥 拉取代码
         uses: actions/checkout@v4
         with:
-          ref: cf 
+          ref: cf   # ✅ 指定分支（cf）
 
       - name: 🐍 安装 Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'   # 缓存依赖
+          cache: 'pip'
 
       - name: 📦 安装依赖
         run: pip install requests
@@ -42,24 +42,20 @@ jobs:
             CloudflareSpeedTest.csv
             ip_test_report.csv
 
-      - name: 🔄 提交结果到仓库
+      - name: 🔄 提交结果到 cf 分支
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Action"
 
           git add CloudflareSpeedTest.csv ip_test_report.csv
 
-          # 检查是否有变化
           if git diff --staged --quiet; then
             echo "没有变化，跳过提交"
             exit 0
           fi
 
-          # 提交更改
           git commit -m "Auto update [$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M')]"
 
-          # 拉取最新代码，避免冲突（如果有冲突，则会自动合并）
+          # 拉取并处理冲突
           git pull --rebase origin cf || true
-          
-          # 推送更改
           git push origin HEAD:cf
