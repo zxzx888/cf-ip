@@ -1,30 +1,33 @@
-name: Auto Test IP
+name: Auto IP Test
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:    # 允许手动运行
   push:
     branches:
-      - cf-ip
+      - test            # 只在 test 分支生效
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./test  # 关键：指定在 test 文件夹运行
-        
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout test branch
+        uses: actions/checkout@v4
         with:
-          ref: cf-ip  # 明确指定分支 cf-ip
+          ref: test
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Install requests
         run: pip install requests
 
-      - name: Run IP Test
+      - name: Run test script
         run: python testsp.py
+
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: good_ips
+          path: good_ips.txt
