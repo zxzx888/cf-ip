@@ -14,17 +14,46 @@ permissions:
 jobs:
   update-ip-list:
     runs-on: ubuntu-latest
+    timeout-minutes: 30   # ✅ 防卡死
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: {python-version: '3.11'}
-      - run: pip install requests
-      - run: python collect_and_test_ips.py
-      - run: |
+      - name: 📥 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 🐍 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'   # ✅ 缓存依赖
+
+      - name: 📦 安装依赖
+        run: pip install requests
+
+      - name: 🚀 运行测速
+        run: python collect_and_test_ips.py
+
+      - name: 📤 上传结果（可下载）
+        uses: actions/upload-artifact@v4
+        with:
+          name: cf-results
+          path: |
+            CloudflareSpeedTest.csv
+            ip_test_report.csv
+
+      - name: 🔄 提交结果到仓库
+        run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Action"
-          # 提交两个文件
+
           git add CloudflareSpeedTest.csv ip_test_report.csv
-          if git diff --staged --quiet; then exit 0; fi
+
+          if git diff --staged --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+
           git commit -m "Auto update [$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M')]"
-          git push
+
+          # ✅ 防冲突
+          git pull --rebase origin main || true
+          git push origin HEAD:main
