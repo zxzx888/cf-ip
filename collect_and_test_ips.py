@@ -88,10 +88,10 @@ def get_score(lat, speed):
     if lat >= 9999 or speed <= 0:
         return 0
 
-    # 速度分 0~70
-    speed_score = min(speed * 3.5, 70)
+    # 速度分 0~60
+    speed_score = min(speed * 3.5, 60)
     # 延迟分 0~30
-    lat_score = max(0, 30 - (lat / 15))
+    lat_score = max(0, 40 - (lat / 15))
 
     score = speed_score + lat_score
     return round(min(score, 100), 1)
@@ -125,7 +125,7 @@ def main():
 
     # ====================== 输出文件 ======================
     # 前10名
-    top_lines = [f"{i['ip']}#【{i['alias']}·{i['score']}分·{i['speed']}Mbps·{i['latency']}ms】"
+    top_lines = [f"{i['ip']}#【{i['alias']}·{i['speed']}Mbps·{i['latency']}ms】"
                  for i in results_sorted[:TOP_COUNT]]
 
     with open("CloudflareSpeedTest.csv", "w", encoding="utf-8") as f:
