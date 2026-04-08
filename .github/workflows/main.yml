@@ -19,11 +19,13 @@ jobs:
       - uses: actions/setup-python@v5
         with: {python-version: '3.11'}
       - run: pip install requests
-      - run: python collect_ips.py
+      # 执行整合后的脚本
+      - run: python collect_and_test_ips.py
       - run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Action"
-          git add CloudflareSpeedTest.csv
+          # 提交生成的文件
+          git add CloudflareSpeedTest.csv ip_test_report.csv
           if git diff --staged --quiet; then exit 0; fi
           git commit -m "Auto update [$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M')]"
           git push
