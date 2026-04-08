@@ -95,27 +95,26 @@ def collect_ips():
     return ip_source
 
 # ====================== 测速 ======================
-def test_ip(ip, session, retry=2):
+def test_ip(ip, session, retry=3):
     lat_list = []
     speed_list = []
 
-    # ===== 延迟测试（3次）=====
-    for i in range(3):
+    # 延迟测试（3次）
+    for i in range(retry):
         for _ in range(retry):
             try:
                 s = time.time()
                 session.get(f"http://{ip}/cdn-cgi/trace", timeout=2)
                 lat = int((time.time() - s) * 1000)
                 lat_list.append(lat)
-                print(f"[延迟] {ip} 第{i+1}次: {lat}ms", flush=True)
                 break
             except:
                 continue
 
-    latency = sorted(lat_list)[len(lat_list)//2] if lat_list else 9999
+    latency_avg = round(sum(lat_list) / len(lat_list), 2) if lat_list else 9999
 
-    # ===== 速度测试（2次）=====
-    for i in range(2):
+    # 速度测试（3次）
+    for i in range(retry):
         for _ in range(retry):
             try:
                 s = time.time()
@@ -127,25 +126,24 @@ def test_ip(ip, session, retry=2):
                 cost = time.time() - s
                 speed = (TEST_FILE_SIZE * 8) / (cost * 1000000)
                 speed_list.append(speed)
-                print(f"[速度] {ip} 第{i+1}次: {round(speed,2)} Mbps", flush=True)
                 break
             except:
                 continue
 
-    speed_avg = round(sum(speed_list)/len(speed_list), 2) if speed_list else 0.0
+    speed_avg = round(sum(speed_list) / len(speed_list), 2) if speed_list else 0.0
 
-    return latency, speed_avg
+    return latency_avg, speed_avg
 
 # ====================== 评分 ======================
 def get_score(lat, speed):
     if lat >= 9999 or speed <= 0:
         return 0
 
-    # 延迟评分（平方根函数，避免过度惩罚）
-    lat_score = max(0, 60 - math.sqrt(lat) / 2)
+    # 延迟评分（减轻高延迟的惩罚）
+    lat_score = max(0, 60 - math.sqrt(lat) / 3)
 
-    # 速度评分（修改对数函数，避免低速度评分过低）
-    speed_score = min(50, 40 * math.log(speed + 1))  # 提升最大速度分数
+    # 速度评分（调整最大得分）
+    speed_score = min(60, 40 * math.log(speed + 1))
 
     # 加权评分，延迟权重 65，速度权重 35
     score = (speed_score * 0.35) + (lat_score * 0.65)
