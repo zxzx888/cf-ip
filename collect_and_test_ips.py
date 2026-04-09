@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 THREADS = 10                  # 并发线程数（适配GitHub Actions）
 MAX_LATENCY = 500             # 最大允许延迟(ms)
 MIN_SUCCESS_RATE = 0.6        # 最低连通成功率
-TOP_N = 20                     # 主文件输出TOP数量
+TOP_N = 10                     # 主文件输出TOP数量
 MAX_TEST_IP_TOTAL = 200       # 全局最大测试IP数（防超时，可自行调大）
 TEST_FILE_SIZE = 64 * 1024    # 测速文件大小
 TIMEOUT = 3                    # 单次请求超时时间
