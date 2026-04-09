@@ -310,7 +310,7 @@ def main():
     # 5. 输出文件1：CloudflareSpeedTest.csv（TOP IP主文件）
     with open("CloudflareSpeedTest.csv", "w", encoding="utf-8") as f:
         for item in top_results:
-            f.write(f"{item['ip']}#{{item['speed']}Mbps·{item['tcp_latency']}ms\n")
+            f.write(f"{item['ip']}#{item['speed']}Mbps·{item['tcp_latency']}ms\n")
 
     # 6. 输出文件2：ip_test_report.csv（全量详细测试报告）
     with open("ip_test_report.csv", "w", encoding="utf-8", newline="") as f:
