@@ -132,8 +132,8 @@ def test_download_speed(ip):
 def calc_score(success_rate, tcp_lat, http_lat, speed):
     """总分严格0-100分，仅用于排序和完整报告，主文件不输出"""
     sr_score = success_rate * 35          # 连通成功率35%
-    tcp_score = max(0, 30 - tcp_lat / 12) # TCP延迟30%
-    http_score = max(0, 20 - http_lat / 15)# 应用层延迟20%
+    tcp_score = max(0, 20 - tcp_lat / 12) # TCP延迟20%
+    http_score = max(0, 30 - http_lat / 15)# 应用层延迟30%
     speed_score = min(15, speed / 2)      # 下载速度15%
 
     total_score = round(sr_score + tcp_score + http_score + speed_score, 1)
