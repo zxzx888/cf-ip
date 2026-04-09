@@ -1,58 +1,58 @@
 IP,来源,综合评分,TCP延迟(ms),HTTPS延迟(ms),连通成功率,下载速度(Mbps),是否可反代,反代检测详情
-173.245.49.194,Uouin,0,3.67,9999,100%,7.14,否,非Cloudflare官方证书
-104.19.121.100,Wetest,0,4.33,9999,100%,5.96,否,非Cloudflare官方证书
-172.64.91.69,Uouin,0,2.33,9999,100%,5.96,否,非Cloudflare官方证书
-104.17.44.95,Wetest,0,6.0,9999,100%,7.74,否,非Cloudflare官方证书
-173.245.58.187,CM,0,2.33,9999,100%,7.13,否,非Cloudflare官方证书
-198.41.194.162,Uouin,0,2.67,9999,100%,9.13,否,非Cloudflare官方证书
-198.41.223.172,CloudFlareYes,0,1.33,9999,100%,6.56,否,非Cloudflare官方证书
-162.159.140.85,Uouin,0,5.67,9999,100%,8.63,否,非Cloudflare官方证书
-108.162.198.120,CFSpeedDNS,0,23.0,9999,100%,3.95,否,非Cloudflare官方证书
-173.245.59.56,CM,0,3.67,9999,100%,8.14,否,非Cloudflare官方证书
-104.17.105.224,Wetest,0,3.33,9999,100%,14.3,否,非Cloudflare官方证书
-104.19.32.77,Ipdb,0,4.67,9999,100%,5.29,否,非Cloudflare官方证书
-8.39.125.41,CM,0,5.67,9999,100%,4.78,否,非Cloudflare官方证书
-162.159.36.106,CM,0,2.33,9999,100%,9.32,否,非Cloudflare官方证书
-162.159.38.122,Wetest,0,29.33,9999,100%,2.01,否,非Cloudflare官方证书
-104.17.78.118,CloudFlareYes,0,2.0,9999,100%,7.43,否,非Cloudflare官方证书
-8.35.211.199,CM,0,3.67,9999,100%,4.86,否,非Cloudflare官方证书
-104.19.40.7,Ipdb,0,3.0,9999,100%,10.27,否,非Cloudflare官方证书
-172.64.82.114,Uouin,0,5.0,9999,100%,7.85,否,非Cloudflare官方证书
-8.39.125.12,CM,0,3.33,9999,100%,11.39,否,非Cloudflare官方证书
-104.18.89.152,Wetest,0,3.33,9999,100%,9.56,否,非Cloudflare官方证书
-104.19.146.103,Ipdb,0,4.33,9999,100%,10.46,否,非Cloudflare官方证书
-198.41.208.15,Uouin,0,3.0,9999,100%,4.66,否,非Cloudflare官方证书
-172.64.48.226,Uouin,0,3.33,9999,100%,9.19,否,非Cloudflare官方证书
-172.64.52.62,CFSpeedDNS,0,14.33,9999,100%,5.95,否,非Cloudflare官方证书
-104.17.105.213,Wetest,0,2.67,9999,100%,11.31,否,非Cloudflare官方证书
-8.35.211.58,CM,0,2.0,9999,100%,12.57,否,非Cloudflare官方证书
-162.159.38.224,CFSpeedDNS,0,22.67,9999,100%,3.45,否,非Cloudflare官方证书
-104.17.123.207,Ipdb,0,1.33,9999,100%,8.43,否,非Cloudflare官方证书
-104.16.244.67,Wetest,0,2.0,9999,100%,9.12,否,非Cloudflare官方证书
-173.245.58.237,CM,0,3.67,9999,100%,7.28,否,非Cloudflare官方证书
-172.64.40.17,CFSpeedDNS,0,2.33,9999,100%,8.4,否,非Cloudflare官方证书
-104.17.169.120,Ipdb,0,1.67,9999,100%,8.46,否,非Cloudflare官方证书
-104.16.140.166,CloudFlareYes,0,2.0,9999,100%,6.4,否,非Cloudflare官方证书
-104.17.153.226,Wetest,0,2.0,9999,100%,6.46,否,非Cloudflare官方证书
-8.39.125.137,CM,0,2.67,9999,100%,6.96,否,非Cloudflare官方证书
-104.17.218.171,Wetest,0,3.33,9999,100%,10.59,否,非Cloudflare官方证书
-104.17.59.174,Ipdb,0,2.33,9999,100%,7.33,否,非Cloudflare官方证书
-104.17.155.7,Ipdb,0,4.0,9999,100%,9.0,否,非Cloudflare官方证书
-104.17.150.113,CloudFlareYes,0,2.33,9999,100%,6.54,否,非Cloudflare官方证书
-104.19.47.163,Ipdb,0,2.67,9999,100%,7.72,否,非Cloudflare官方证书
-104.18.198.28,CloudFlareYes,0,7.67,9999,100%,14.32,否,非Cloudflare官方证书
-104.17.188.198,Wetest,0,6.67,9999,100%,9.04,否,非Cloudflare官方证书
-162.159.38.38,Wetest,0,28.0,9999,100%,3.2,否,非Cloudflare官方证书
-104.19.145.36,Ipdb,0,4.0,9999,100%,7.29,否,非Cloudflare官方证书
-104.19.128.62,Wetest,0,2.0,9999,100%,3.34,否,非Cloudflare官方证书
-162.159.44.101,Wetest,0,25.67,9999,100%,3.9,否,非Cloudflare官方证书
-104.17.58.192,Ipdb,0,3.0,9999,100%,8.81,否,非Cloudflare官方证书
-162.159.24.131,Uouin,0,4.67,9999,100%,10.37,否,非Cloudflare官方证书
-172.64.52.127,Uouin,0,15.0,9999,100%,6.22,否,非Cloudflare官方证书
-162.159.38.1,Wetest,0,24.0,9999,100%,4.22,否,非Cloudflare官方证书
-162.159.36.125,CM,0,2.0,9999,100%,9.32,否,非Cloudflare官方证书
-172.64.49.136,CFSpeedDNS,0,1.67,9999,100%,8.12,否,非Cloudflare官方证书
-162.159.9.232,Wetest,0,2.33,9999,100%,8.77,否,非Cloudflare官方证书
-162.159.45.62,CFSpeedDNS,0,22.33,9999,100%,3.77,否,非Cloudflare官方证书
-162.159.61.183,Uouin,0,2.67,9999,100%,6.55,否,非Cloudflare官方证书
-104.18.38.75,CFSpeedDNS,0,3.0,9999,100%,12.89,否,非Cloudflare官方证书
+173.245.59.5,CM,0,2.0,9999,100%,7.76,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='173.245.59.5', port=443)"
+104.16.140.166,CloudFlareYes,0,3.67,9999,100%,8.02,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.16.140.166', port=44"
+162.159.38.122,Wetest,0,22.0,9999,100%,3.56,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.38.122', port=44"
+104.19.146.103,Ipdb,0,1.33,9999,100%,7.35,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.19.146.103', port=44"
+162.159.43.72,CM,0,2.0,9999,100%,9.47,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.43.72', port=443"
+162.159.24.131,Uouin,0,2.0,9999,100%,12.0,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.24.131', port=44"
+172.64.40.17,CFSpeedDNS,0,3.67,9999,100%,7.83,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='172.64.40.17', port=443)"
+104.19.128.62,Wetest,0,2.0,9999,100%,8.0,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.19.128.62', port=443"
+104.17.105.224,Wetest,0,4.33,9999,100%,9.19,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.17.105.224', port=44"
+198.41.194.162,Uouin,0,2.0,9999,100%,3.26,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='198.41.194.162', port=44"
+162.159.46.81,CM,0,1.67,9999,100%,6.95,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.46.81', port=443"
+104.19.121.100,Wetest,0,2.33,9999,100%,5.34,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.19.121.100', port=44"
+162.159.38.1,Wetest,0,26.0,9999,100%,2.61,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.38.1', port=443)"
+108.162.198.120,CFSpeedDNS,0,22.67,9999,100%,3.78,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='108.162.198.120', port=4"
+104.16.244.67,Wetest,0,1.67,9999,100%,8.79,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.16.244.67', port=443"
+198.41.208.15,Uouin,0,1.67,9999,100%,9.57,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='198.41.208.15', port=443"
+104.19.145.36,Ipdb,0,2.33,40,100%,5.71,否,✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头被拦截，状态码403 | ✅ 无访问拦截
+172.64.91.69,Uouin,0,1.67,9999,100%,6.16,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='172.64.91.69', port=443)"
+104.17.153.226,Wetest,0,2.33,9999,100%,4.92,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.17.153.226', port=44"
+104.17.188.198,Wetest,0,2.0,9999,100%,10.45,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.17.188.198', port=44"
+104.17.59.174,Ipdb,0,2.0,9999,100%,9.27,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.17.59.174', port=443"
+8.39.125.222,CM,0,4.67,90,100%,7.49,否,✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头被拦截，状态码403 | ✅ 无访问拦截
+162.159.36.0,CloudFlareYes,0,2.67,9999,100%,10.02,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.36.0', port=443)"
+104.17.218.171,Wetest,0,3.0,9999,100%,11.6,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.17.218.171', port=44"
+104.17.123.207,Ipdb,0,2.0,9999,100%,12.15,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.17.123.207', port=44"
+162.159.45.62,CFSpeedDNS,0,24.33,9999,100%,4.34,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.45.62', port=443"
+104.17.44.95,Wetest,0,1.67,9999,100%,10.24,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.17.44.95', port=443)"
+162.159.44.101,Wetest,0,24.0,9999,100%,3.62,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.44.101', port=44"
+162.159.36.126,CM,0,3.33,9999,100%,12.15,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.36.126', port=44"
+162.159.61.183,Uouin,0,1.67,9999,100%,2.22,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.61.183', port=44"
+162.159.9.232,Wetest,0,2.33,9999,100%,11.18,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.9.232', port=443"
+162.159.32.66,CM,0,3.33,9999,100%,8.03,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.32.66', port=443"
+104.18.89.152,Wetest,0,2.67,9999,100%,8.88,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.18.89.152', port=443"
+8.35.211.240,CM,0,1.33,64,100%,8.6,否,✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头被拦截，状态码403 | ✅ 无访问拦截
+8.35.211.71,CM,0,2.0,95,100%,9.2,否,✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头被拦截，状态码403 | ✅ 无访问拦截
+172.64.49.136,CFSpeedDNS,0,2.33,9999,100%,10.33,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='172.64.49.136', port=443"
+162.159.38.224,CFSpeedDNS,0,27.67,9999,100%,2.45,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.38.224', port=44"
+104.17.150.113,CloudFlareYes,0,1.33,9999,100%,9.49,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.17.150.113', port=44"
+104.18.198.28,CloudFlareYes,0,1.67,126,100%,12.61,否,✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头被拦截，状态码403 | ✅ 无访问拦截
+172.64.52.62,CFSpeedDNS,0,14.0,9999,100%,3.29,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='172.64.52.62', port=443)"
+162.159.140.85,Uouin,0,2.0,9999,100%,8.09,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.140.85', port=44"
+172.64.52.127,Uouin,0,16.33,9999,100%,5.1,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='172.64.52.127', port=443"
+104.17.155.7,Ipdb,0,2.33,205,100%,12.39,否,✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头被拦截，状态码403 | ✅ 无访问拦截
+173.245.59.40,CM,0,1.67,9999,100%,9.27,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='173.245.59.40', port=443"
+162.159.38.38,Wetest,0,22.0,9999,100%,2.71,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='162.159.38.38', port=443"
+198.41.223.172,CloudFlareYes,0,2.0,9999,100%,4.37,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='198.41.223.172', port=44"
+104.19.40.7,Ipdb,0,4.67,9999,100%,13.42,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.19.40.7', port=443):"
+104.17.58.192,Ipdb,0,4.33,38,100%,7.9,否,✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头被拦截，状态码403 | ✅ 无访问拦截
+172.64.82.114,Uouin,0,2.0,9999,100%,7.0,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='172.64.82.114', port=443"
+104.17.169.120,Ipdb,0,2.0,9999,100%,9.2,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.17.169.120', port=44"
+8.35.211.170,CM,0,2.0,52,100%,10.54,否,✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头被拦截，状态码403 | ✅ 无访问拦截
+104.17.105.213,Wetest,0,2.67,9999,100%,11.97,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.17.105.213', port=44"
+104.19.32.77,Ipdb,0,1.67,9999,100%,15.74,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.19.32.77', port=443)"
+173.245.49.194,Uouin,0,1.67,9999,100%,9.88,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='173.245.49.194', port=44"
+104.19.47.163,Ipdb,0,1.67,9999,100%,9.8,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.19.47.163', port=443"
+172.64.48.226,Uouin,0,1.67,9999,100%,8.42,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='172.64.48.226', port=443"
+104.18.38.75,CFSpeedDNS,0,1.67,9999,100%,8.99,否,"✅ 80/443端口连通正常 | ❌ 非Cloudflare官方证书 | ❌ Host头检测失败: HTTPSConnectionPool(host='104.18.38.75', port=443)"
