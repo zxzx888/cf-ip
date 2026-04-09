@@ -131,12 +131,12 @@ def main():
 
             if tcp_lat <= MAX_LATENCY and speed > 0:
                 results.append([
-                    ip, tcp_lat, http_lat, f"{int(rate*100)}%", speed
+                    ip, http_lat, tcp_lat, speed, f"{int(rate*100)}%"
                 ])
 
     with open("ip_test_report.csv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["IP", "TCP稳定延迟(ms)", "HTTP稳定延迟(ms)", "连通成功率", "下载速度(Mbps)"])
+        w.writerow(["IP", "HTTP稳定延迟(ms)", "TCP稳定延迟(ms)", "下载速度(Mbps)", "连通成功率"])
         w.writerows(results)
 
     print(f"\n🏆 测试完成 | 有效可用IP（100%连通）: {len(results)}", flush=True)
