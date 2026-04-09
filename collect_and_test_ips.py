@@ -12,12 +12,12 @@ MAX_LATENCY = 500
 MIN_SUCCESS_RATE = 1.0
 TEST_FILE_SIZE = 64 * 1024
 TIMEOUT = 3
-TEST_ROUNDS = 5
+TEST_ROUNDS = 6
 # ======================================================
 
 URLS = [
     'https://ip.164746.xyz',
-    'https://cf.090227.xyz/ct',
+    'https://cf.090227.xyz/ct?ips=10',
     'https://cf.090227.xyz/CloudFlareYes',
     'https://www.wetest.vip/page/cloudflare/address_v4.html',
     'https://ipdb.api.030101.xyz/?type=bestcf',
@@ -88,50 +88,59 @@ def test_speed(ip):
 # ====================== 采集IP ======================
 def collect_ips():
     ipset = set()
+    print("\n=== 开始全量采集IP（无单源数量限制） ===", flush=True)
     for url in URLS:
         try:
+            print(f"🔍 抓取: {url}", flush=True)
             r = requests.get(url, timeout=10)
-            ips = [valid_ip(i) for i in ip_pattern.findall(r.text)]
-            for ip in ips:
-                if ip:
-                    ipset.add(ip)
-        except:
-            continue
+            raw_ips = ip_pattern.findall(r.text)
+            valid_ips = [valid_ip(ip) for ip in raw_ips if valid_ip(ip)]
+            for ip in valid_ips:
+                ipset.add(ip)
+            print(f"✅ 原始提取: {len(raw_ips)} | 有效IP: {len(valid_ips)} | 累计去重: {len(ipset)}", flush=True)
+        except Exception as e:
+            print(f"❌ 抓取失败: {str(e)[:40]}", flush=True)
+    print(f"全量采集完成 | 总有效去重IP: {len(ipset)}", flush=True)
     return list(ipset)
 
 # ====================== 主程序 ======================
 def main():
-    iplist = collect_ips()
-    random.shuffle(iplist)
+    ip_list = collect_ips()
+    if not ip_list:
+        print("❌ 未获取到有效IP，程序终止", flush=True)
+        return
+
+    random.shuffle(ip_list)
     results = []
 
+    print(f"\n=== 开始并发测试 ===", flush=True)
+
     with ThreadPoolExecutor(THREADS) as pool:
-        for ip in iplist:
-            print(f"测试: {ip}")
+        for ip in ip_list:
+            print(f"\n📶 正在测试IP: {ip}", flush=True)
             tcp_lat, rate = test_tcp(ip)
 
-            # 必须100%成功才继续
             if rate < MIN_SUCCESS_RATE:
-                print(f" → 成功率不足100%，跳过\n")
+                print(f"   ❌ 成功率{rate*100:.0f}% < 100%，直接排除", flush=True)
                 continue
 
             http_lat = test_http(ip)
             speed = test_speed(ip)
 
+            print(f"   ✅ 结果 | TCP:{tcp_lat}ms | HTTP:{http_lat}ms | 速度:{speed}Mbps", flush=True)
+
             if tcp_lat <= MAX_LATENCY and speed > 0:
                 results.append([
                     ip, tcp_lat, http_lat, f"{int(rate*100)}%", speed
                 ])
-            print()
 
-    # 只输出这一个文件
     with open("ip_test_report.csv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
         w.writerow(["IP", "TCP稳定延迟(ms)", "HTTP稳定延迟(ms)", "连通成功率", "下载速度(Mbps)"])
         w.writerows(results)
 
-    print(f"✅ 完成！共记录 {len(results)} 个优质IP（100%连通）")
-    print("📁 仅输出：ip_test_report.csv")
+    print(f"\n🏆 测试完成 | 有效可用IP（100%连通）: {len(results)}", flush=True)
+    print("✅ 已生成报告：ip_test_report.csv", flush=True)
 
 if __name__ == "__main__":
     main()
