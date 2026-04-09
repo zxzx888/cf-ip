@@ -39,8 +39,7 @@ jobs:
         with:
           name: cf-results
           path: |
-            CloudflareSpeedTest.csv
-            ip_test_report.csv
+                        ip_test_report.csv
 
       - name: 🔄 提交结果到 cf 分支
         run: |
