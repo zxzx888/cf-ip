@@ -5,22 +5,17 @@ import random
 import socket
 import csv
 from concurrent.futures import ThreadPoolExecutor
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-
-# 关闭HTTPS冗余警告
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # ====================== 核心配置 ======================
-THREADS = 15                  # 并发线程数
+THREADS = 10                  # 并发线程数（适配GitHub Actions，避免被拦截）
 MAX_LATENCY = 500             # 最大允许延迟(ms)
 MIN_SUCCESS_RATE = 0.6        # 最低TCP连通成功率
 TOP_N = 20                     # 主文件输出TOP数量
-PER_SOURCE_MAX_IP = 20        # 每个采集源最多取前20个IP
-MAX_TEST_IP_TOTAL = 180       # 全局最大测试IP数（防超时）
+MAX_TEST_IP_TOTAL = 200       # 全局最大测试IP数（防GitHub Actions超时，可自行调大）
 TEST_FILE_SIZE = 64 * 1024    # 测速文件大小
-TIMEOUT = 3                    # 统一请求超时时间
+TIMEOUT = 4                    # 统一请求超时时间
 
-# 完整6个采集源（无删减）
+# 完整6个采集源（无删减、无单源IP数量限制）
 URLS = [
     'https://ip.164746.xyz',
     'https://cf.090227.xyz/ct?ips=10',
@@ -48,9 +43,9 @@ def valid_ip(ip_str):
     except:
         return None
 
-# ====================== 核心网络测试（保留TCP+HTTPS） ======================
+# ====================== 核心网络测试（无HTTPS超时） ======================
 def test_ip(ip):
-    """一次性完成所有核心测试，无重复调用，无冗余逻辑"""
+    """一次性完成所有核心测试，无重复调用"""
     # 1. TCP连通测试（3次，算成功率+平均延迟）
     success_count = 0
     latency_list = []
@@ -67,18 +62,17 @@ def test_ip(ip):
     success_rate = success_count / 3
     tcp_avg_latency = round(sum(latency_list) / len(latency_list), 2)
 
-    # 2. HTTPS应用层延迟测试
+    # 2. 应用层延迟测试（HTTP协议，无超时问题）
     try:
         start = time.time()
         requests.get(
-            f"https://{ip}/cdn-cgi/trace",
+            f"http://{ip}/cdn-cgi/trace",
             headers={"Host": "speed.cloudflare.com"},
-            timeout=TIMEOUT,
-            verify=False
+            timeout=TIMEOUT
         )
-        https_latency = int((time.time() - start) * 1000)
+        http_latency = int((time.time() - start) * 1000)
     except:
-        https_latency = 9999
+        http_latency = 9999
 
     # 3. 真实下载测速
     try:
@@ -93,99 +87,92 @@ def test_ip(ip):
     except:
         speed = 0.0
 
-    return success_rate, tcp_avg_latency, https_latency, speed
+    return success_rate, tcp_avg_latency, http_latency, speed
 
-# ====================== 极简评分规则（适配精简后逻辑） ======================
-def calc_score(success_rate, tcp_lat, https_lat, speed):
-    """
-    总分严格0-100分，权重分配：
-    TCP连通成功率35% + TCP延迟30% + HTTPS延迟20% + 下载速度15%
-    """
-    # 连通成功率：0-35分
-    sr_score = success_rate * 35
-    # TCP延迟：0-30分（延迟越低分越高）
-    tcp_score = max(0, 30 - tcp_lat / 12)
-    # HTTPS延迟：0-20分
-    https_score = max(0, 20 - https_lat / 15)
-    # 下载速度：0-15分
-    speed_score = min(15, speed / 2)
+# ====================== 极简评分规则 ======================
+def calc_score(success_rate, tcp_lat, http_lat, speed):
+    """总分严格0-100分，权重贴合核心体验"""
+    sr_score = success_rate * 35          # 连通成功率35%
+    tcp_score = max(0, 30 - tcp_lat / 12) # TCP延迟30%
+    http_score = max(0, 20 - http_lat / 15)# 应用层延迟20%
+    speed_score = min(15, speed / 2)      # 下载速度15%
 
-    total_score = round(sr_score + tcp_score + https_score + speed_score, 1)
-    return min(total_score, 100)  # 严格不超过100分
+    total_score = round(sr_score + tcp_score + http_score + speed_score, 1)
+    return min(total_score, 100) # 严格不超过100分
 
-# ====================== IP采集（完整源+单源前20限制） ======================
+# ====================== IP采集（已取消单源前20限制，全量采集） ======================
 def collect_ips():
-    ip_set = set()
-    print("\n=== 开始采集IP ===")
+    ip_set = set() # 全局去重，避免重复测试
+    print("\n=== 开始全量采集IP（已取消单源数量限制） ===")
     for url in URLS:
         try:
             print(f"🔍 抓取: {url}")
             r = requests.get(url, headers=get_headers(), timeout=10)
-            # 提取+去重+验证IP
+            # 提取所有IP
             raw_ips = ip_pattern.findall(r.text)
+            # 验证IP格式有效性
             valid_ips = [valid_ip(ip) for ip in raw_ips if valid_ip(ip)]
-            # 单源最多取前20个
-            final_ips = valid_ips[:PER_SOURCE_MAX_IP]
-            for ip in final_ips:
+            # 全量加入去重集合（无数量截断）
+            for ip in valid_ips:
                 ip_set.add(ip)
-            print(f"✅ 有效IP: {len(valid_ips)} | 取用: {len(final_ips)} | 累计去重: {len(ip_set)}")
+            print(f"✅ 原始提取IP: {len(raw_ips)} | 有效IP: {len(valid_ips)} | 累计去重总IP: {len(ip_set)}")
         except Exception as e:
             print(f"❌ 抓取失败: {str(e)[:40]}")
-    print(f"采集完成 | 总有效IP: {len(ip_set)}")
+    print(f"全量采集完成 | 总有效去重IP: {len(ip_set)}")
     return list(ip_set)
 
 # ====================== 主程序（仅输出2个文件） ======================
 def main():
-    # 1. 采集IP
+    # 1. 全量采集IP
     ip_list = collect_ips()
     if not ip_list:
         print("❌ 未获取到有效IP，程序终止")
         return
 
-    # 2. 打乱+限制测试数量，防超时
+    # 2. 随机打乱+全局数量限制（防止GitHub Actions超时，可自行调大/关闭）
     random.shuffle(ip_list)
     test_ips = ip_list[:MAX_TEST_IP_TOTAL]
-    print(f"\n=== 开始并发测试 | 总测试IP数: {len(test_ips)} ===")
+    print(f"\n=== 开始并发测试 | 本次测试IP数: {len(test_ips)} ===")
 
     # 3. 多线程并发测试
     results = []
     with ThreadPoolExecutor(max_workers=THREADS) as pool:
         for ip in test_ips:
-            sr, tcp_lat, https_lat, speed = test_ip(ip)
-            score = calc_score(sr, tcp_lat, https_lat, speed)
+            sr, tcp_lat, http_lat, speed = test_ip(ip)
+            score = calc_score(sr, tcp_lat, http_lat, speed)
             # 过滤无效IP
             if sr >= MIN_SUCCESS_RATE and tcp_lat <= MAX_LATENCY and speed > 0:
                 results.append({
                     "ip": ip,
                     "score": score,
                     "tcp_latency": tcp_lat,
-                    "https_latency": https_lat,
+                    "http_latency": http_lat,
                     "success_rate": sr,
                     "speed": speed
                 })
             # 打印核心日志
-            print(f"IP: {ip:16} | 得分:{score:4.1f} | TCP:{tcp_lat:4}ms | HTTPS:{https_lat:4}ms | 速度:{speed:5.2f}Mbps")
+            print(f"IP: {ip:16} | 得分:{score:4.1f} | TCP:{tcp_lat:4}ms | HTTP:{http_lat:4}ms | 速度:{speed:5.2f}Mbps")
 
-    # 4. 按得分降序排序
+    # 4. 按综合得分降序排序
     results.sort(key=lambda x: -x["score"])
     top_results = results[:TOP_N]
-    print(f"\n🏆 测试完成 | 有效IP: {len(results)} | 输出TOP{TOP_N}")
+    print(f"\n🏆 测试完成 | 有效可用IP: {len(results)} | 输出TOP{TOP_N}")
 
-    # 5. 输出文件1：CloudflareSpeedTest.csv（TOP IP，无冗余备注）
+    # 5. 输出文件1：CloudflareSpeedTest.csv（TOP IP主文件）
     with open("CloudflareSpeedTest.csv", "w", encoding="utf-8") as f:
         for item in top_results:
-            f.write(f"{item['ip']}#{item['score']}分·{item['speed']}Mbps·{item['tcp_latency']}ms\n")
+            f.write(f"{item['ip']}#{{item['speed']}Mbps·{item['tcp_latency']}ms\n")
 
-    # 6. 输出文件2：ip_test_report.csv（全量详细数据）
+    # 6. 输出文件2：ip_test_report.csv（全量详细测试报告）
     with open("ip_test_report.csv", "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["IP", "综合评分", "TCP延迟(ms)", "HTTPS延迟(ms)", "连通成功率", "下载速度(Mbps)"])
+        writer.writerow(["IP", "综合评分", "TCP延迟(ms)", "HTTP延迟(ms)", "连通成功率", "下载速度(Mbps)"])
         for item in results:
             writer.writerow([
                 item["ip"],
                 item["score"],
                 item["tcp_latency"],
-                item["https_latency"],
+                item["http_latency"],
                 f"{item['success_rate']*100:.0f}%",
                 item["speed"]
             ])
