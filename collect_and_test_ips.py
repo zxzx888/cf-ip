@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 # ====================== 核心配置 ======================
 THREADS = 10                  # 并发线程数（适配GitHub Actions）
 MAX_LATENCY = 500             # 最大允许延迟(ms)
-MIN_SUCCESS_RATE = 0.6        # 最低连通成功率
+MIN_SUCCESS_RATE = 0.9        # 最低连通成功率（90%）
 TOP_N = 20                     # 主文件输出TOP数量
 MAX_TEST_IP_TOTAL = 200       # 全局最大测试IP数（防超时，可自行调大）
 TEST_FILE_SIZE = 64 * 1024    # 测速文件大小
@@ -128,15 +128,20 @@ def test_download_speed(ip):
     except:
         return 0.0
 
-# ====================== 评分规则（仅用于排序和完整报告） ======================
-def calc_score(success_rate, tcp_lat, http_lat, speed):
-    """总分严格0-100分，仅用于排序和完整报告，主文件不输出"""
-    sr_score = success_rate * 35          # 连通成功率35%
-    tcp_score = max(0, 20 - tcp_lat / 12) # TCP延迟20%
-    http_score = max(0, 30 - http_lat / 15)# 应用层延迟30%
-    speed_score = min(15, speed / 2)      # 下载速度15%
+# ====================== 评分规则（重新设定比例） ======================
+def calc_score(tcp_lat, http_lat, speed):
+    """
+    总分严格0-100分，仅用于排序和完整报告，主文件不输出
+    权重调整（仅保留三项，成功率已一票否决）：
+    - TCP延迟：15%（进一步降低）
+    - HTTP延迟：60%（大幅提升，核心权重）
+    - 下载速度：25%（适度提升）
+    """
+    tcp_score = max(0, 15 - tcp_lat / 20)  # TCP延迟15%，分母越大，分数衰减越慢
+    http_score = max(0, 60 - http_lat / 5) # HTTP延迟60%，分母越小，对延迟越敏感
+    speed_score = min(25, speed / 1.5)    # 下载速度25%
 
-    total_score = round(sr_score + tcp_score + http_score + speed_score, 1)
+    total_score = round(tcp_score + http_score + speed_score, 1)
     return min(total_score, 100)
 
 # ====================== IP全量采集（无单源数量限制） ======================
@@ -178,14 +183,21 @@ def main():
             print(f"\n📶 正在测试IP: {ip}", flush=True)
             # 核心：多轮稳定延迟测试
             tcp_lat, success_rate = test_tcp_latency_stable(ip)
-            http_lat = test_http_latency_stable(ip)
-            # 下载测速
-            speed = test_download_speed(ip)
-            # 计算综合评分
-            score = calc_score(success_rate, tcp_lat, http_lat, speed)
             
-            # 过滤无效IP
-            if success_rate >= MIN_SUCCESS_RATE and tcp_lat <= MAX_LATENCY and speed > 0:
+            # ===== 连通成功率一票否决（必须100%） =====
+            if success_rate < MIN_SUCCESS_RATE:
+                print(f"   ❌ 成功率{success_rate*100:.0f}% < 100%，直接排除", flush=True)
+                continue
+            
+            # 仅当成功率100%后，才继续测试HTTP延迟和下载速度
+            http_lat = test_http_latency_stable(ip)
+            speed = test_download_speed(ip)
+            
+            # 计算综合评分（仅传入TCP、HTTP延迟和速度）
+            score = calc_score(tcp_lat, http_lat, speed)
+            
+            # 过滤其他无效条件（延迟/速度）
+            if tcp_lat <= MAX_LATENCY and speed > 0:
                 results.append({
                     "ip": ip,
                     "score": score,
@@ -201,7 +213,7 @@ def main():
     # 4. 按得分降序排序
     results.sort(key=lambda x: -x["score"])
     top_results = results[:TOP_N]
-    print(f"\n🏆 测试完成 | 有效可用IP: {len(results)} | 输出TOP{TOP_N}", flush=True)
+    print(f"\n🏆 测试完成 | 有效可用IP（成功率100%）: {len(results)} | 输出TOP{TOP_N}", flush=True)
 
     # ====================== 输出文件（严格符合要求） ======================
     # 1. 主文件：CloudflareSpeedTest.csv（完全无「分」字样，仅IP+速度+延迟）
