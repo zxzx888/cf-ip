@@ -3,30 +3,17 @@ import re
 import time
 import csv
 import random
-import math
-import signal
+import socket
 
-# ====================== 配置 ======================
-TOP_COUNT = 10
-MAX_LATENCY = 500
-TEST_FILE_SIZE = 1024 * 1024
-MAX_TEST_IPS = 100   # 限制测试数量（防止 GitHub 超时）
+# ====================== 配置区 ======================
+TOP_COUNT = 10                # 最终输出前10个最优IP
+MAX_LATENCY = 300             # 最大允许延迟(ms)
+MIN_SUCCESS_RATE = 0.8        # 最低TCP连通成功率
+TEST_FILE_SIZE = 128 * 1024   # 测速文件大小
+MAX_TEST_IPS = 120            # 全局最大测试IP数（防超时）
+PER_SOURCE_MAX_IP = 20        # 每个采集源最多取前20个IP
 
-# 超时保护（30分钟）
-def timeout_handler(signum, frame):
-    raise Exception("任务超时终止")
-
-signal.signal(signal.SIGALRM, timeout_handler)
-signal.alarm(1800)
-
-# 随机UA（防封）
-UA_LIST = [
-    "Mozilla/5.0",
-    "Chrome/120.0",
-    "Safari/537.36"
-]
-
-# 采集源
+# 采集源配置
 urls = [
     'https://ip.164746.xyz',
     'https://cf.090227.xyz/ct?ips=10',
@@ -36,6 +23,7 @@ urls = [
     'https://api.uouin.com/cloudflare.html'
 ]
 
+# 采集源别名映射
 name_map = {
     'https://ip.164746.xyz': 'CFSpeedDNS',
     'https://cf.090227.xyz/ct?ips=10': 'CM',
@@ -45,168 +33,194 @@ name_map = {
     'https://api.uouin.com/cloudflare.html': 'Uouin'
 }
 
-ip_pattern = re.compile(r'\b(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'
-                        r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'
-                        r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.'
-                        r'(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b')
+# IP正则匹配
+ip_pattern = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b')
+# ==================================================
 
-# ====================== 工具 ======================
+# ====================== 工具函数 ======================
 def get_headers():
-    return {"User-Agent": random.choice(UA_LIST)}
+    """随机UA防封"""
+    return {"User-Agent": f"Mozilla/5.0 (Windows NT {random.randint(10,11)}.0; Win64; x64) AppleWebKit/537.36"}
 
-def clean_ip(ip_str):
+def valid_ip(ip_str):
+    """清洗并验证IP格式有效性"""
     ip_str = ip_str.strip()
-    parts = ip_str.split(".")
+    parts = ip_str.split('.')
     if len(parts) != 4:
         return None
     try:
-        if all(0 <= int(p) <= 255 for p in parts):
-            return ip_str
+        return ip_str if all(0 <= int(part) <= 255 for part in parts) else None
     except:
         return None
 
-# ====================== 采集IP ======================
+def tcp_handshake_latency(ip, port=443, timeout=2):
+    """TCP握手延迟测试（贴近真实网络延迟）"""
+    try:
+        start = time.time()
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(timeout)
+        sock.connect((ip, port))
+        latency = int((time.time() - start) * 1000)
+        sock.close()
+        return latency
+    except:
+        return 9999
+
+def test_connect_success_rate(ip, retry=5):
+    """TCP连通成功率测试（过滤丢包IP）"""
+    success = 0
+    for _ in range(retry):
+        if tcp_handshake_latency(ip, timeout=1.5) < 9999:
+            success += 1
+        time.sleep(0.1)
+    return success / retry
+
+def test_download_speed(ip):
+    """轻量化下载速度测试"""
+    try:
+        start = time.time()
+        requests.get(
+            f"http://{ip}/__down?bytes={TEST_FILE_SIZE}",
+            headers={"Host": "speed.cloudflare.com"},
+            timeout=3
+        )
+        cost = time.time() - start
+        speed = round((TEST_FILE_SIZE * 8) / (cost * 1000000), 2)
+        return speed
+    except:
+        return 0.0
+
+# ====================== 核心：IP采集（单源前20限制） ======================
 def collect_ips():
-    ip_source = {}
-    print("\n【采集IP】", flush=True)
+    ip_source = {}  # 全局去重：IP -> 来源URL
+    print("\n=== 开始采集IP（每个源最多取前20个有效IP） ===", flush=True)
 
     for url in urls:
         try:
-            print(f"抓取: {url}", flush=True)
+            print(f"\n🔍 正在抓取: {url}", flush=True)
+            # 请求采集源
             r = requests.get(url, headers=get_headers(), timeout=10)
-            ips = ip_pattern.findall(r.text)
-
-            valid = []
-            for i in ips:
-                ip = clean_ip(i)
-                if ip:
-                    valid.append(ip)
-
-            for ip in valid:
-                if ip not in ip_source:
-                    ip_source[ip] = url
-
-            print(f"  有效IP: {len(valid)} | 累计: {len(ip_source)}", flush=True)
+            r.raise_for_status()
+            
+            # 提取并清洗IP
+            raw_ips = ip_pattern.findall(r.text)
+            valid_ips = []
+            for ip in raw_ips:
+                cleaned_ip = valid_ip(ip)
+                # 全局去重，避免重复IP
+                if cleaned_ip and cleaned_ip not in ip_source:
+                    valid_ips.append(cleaned_ip)
+            
+            # 单源最多取前20个
+            final_ips = valid_ips[:PER_SOURCE_MAX_IP]
+            # 加入全局字典
+            for ip in final_ips:
+                ip_source[ip] = url
+            
+            print(f"✅ 原始提取IP: {len(raw_ips)} | 有效去重IP: {len(valid_ips)} | 取前{len(final_ips)}个", flush=True)
 
         except Exception as e:
-            print(f"  失败: {str(e)[:50]}", flush=True)
+            print(f"❌ 抓取失败: {str(e)[:50]}", flush=True)
 
-    print(f"采集完成: {len(ip_source)} 个IP", flush=True)
+    print(f"\n采集完成 | 总有效去重IP: {len(ip_source)}", flush=True)
     return ip_source
 
-# ====================== 测速 ======================
-def test_ip(ip, session, retry=3):
-    lat_list = []
-    speed_list = []
+# ====================== 均衡评分模型 ======================
+def get_score(latency, success_rate, speed):
+    if latency >= 9999 or success_rate < MIN_SUCCESS_RATE or speed <= 0:
+        return 0.0
+    
+    # 权重：连通成功率45% + 延迟45% + 速度10%
+    success_score = success_rate * 45
+    latency_score = max(0, 45 - (latency / 10))
+    speed_score = min(10, speed * 1)
+    
+    total_score = success_score + latency_score + speed_score
+    return round(min(total_score, 100), 1)  # 严格0-100分，不爆表
 
-    # 延迟测试（3次）
-    for i in range(retry):
-        for _ in range(retry):
-            try:
-                s = time.time()
-                session.get(f"http://{ip}/cdn-cgi/trace", timeout=2)
-                lat = int((time.time() - s) * 1000)
-                lat_list.append(lat)
-                break
-            except:
-                continue
-
-    latency_avg = round(sum(lat_list) / len(lat_list), 2) if lat_list else 9999
-
-    # 速度测试（3次）
-    for i in range(retry):
-        for _ in range(retry):
-            try:
-                s = time.time()
-                session.get(
-                    f"http://{ip}/__down?bytes={TEST_FILE_SIZE}",
-                    headers={"Host": "speed.cloudflare.com"},
-                    timeout=5
-                )
-                cost = time.time() - s
-                speed = (TEST_FILE_SIZE * 8) / (cost * 1000000)
-                speed_list.append(speed)
-                break
-            except:
-                continue
-
-    speed_avg = round(sum(speed_list) / len(speed_list), 2) if speed_list else 0.0
-
-    return latency_avg, speed_avg
-
-# ====================== 评分 ======================
-def get_score(lat, speed):
-    if lat >= 9999 or speed <= 0:
-        return 0
-
-    # 延迟评分（减轻高延迟的惩罚）
-    lat_score = max(0, 60 - math.sqrt(lat) / 3)
-
-    # 速度评分（调整最大得分）
-    speed_score = min(60, 40 * math.log(speed + 1))
-
-    # 加权评分，延迟权重 65，速度权重 35
-    score = (speed_score * 0.35) + (lat_score * 0.65)
-
-    return round(min(score, 100), 1)
-
-# ====================== 主流程 ======================
+# ====================== 主执行流程 ======================
 def main():
-    session = requests.Session()
-
+    # 1. 采集IP
     ip_source = collect_ips()
     if not ip_source:
-        print("无IP", flush=True)
+        print("❌ 未获取到有效IP，程序终止", flush=True)
         return
 
+    # 2. 测速与评分
     results = []
-    print("\n【测速 + 评分】", flush=True)
+    print("\n=== 开始IP测速与评分 ===", flush=True)
 
-    ip_items = list(ip_source.items())[:MAX_TEST_IPS]
+    # 随机打乱+全局数量限制，防止GitHub Actions超时
+    ip_items = list(ip_source.items())
+    random.shuffle(ip_items)
+    ip_items = ip_items[:MAX_TEST_IPS]
 
     for ip, source_url in ip_items:
-        lat, speed = test_ip(ip, session)
+        print(f"\n📶 测试IP: {ip}", flush=True)
+        # 1. 连通成功率测试
+        success_rate = test_connect_success_rate(ip)
+        print(f"  连通成功率: {success_rate*100:.0f}%", flush=True)
+        if success_rate < MIN_SUCCESS_RATE:
+            print(f"  ❌ 丢包率过高，跳过", flush=True)
+            continue
+        
+        # 2. TCP延迟测试
+        latency = tcp_handshake_latency(ip)
+        print(f"  TCP延迟: {latency}ms", flush=True)
+        if latency > MAX_LATENCY:
+            print(f"  ❌ 延迟过高，跳过", flush=True)
+            continue
+        
+        # 3. 下载速度测试
+        speed = test_download_speed(ip)
+        print(f"  下载速度: {speed}Mbps", flush=True)
+
+        # 4. 计算综合评分
+        score = get_score(latency, success_rate, speed)
         alias = name_map.get(source_url, "未知")
-        score = get_score(lat, speed)
+        print(f"  综合评分: {score}分 | 来源: {alias}", flush=True)
 
-        print(f"IP: {ip} | 延迟:{lat}ms | 速度:{speed}Mbps | 得分:{score}", flush=True)
+        # 保存有效结果
+        results.append({
+            "ip": ip,
+            "latency": latency,
+            "success_rate": success_rate,
+            "speed": speed,
+            "score": score,
+            "alias": alias
+        })
 
-        if lat < MAX_LATENCY and speed > 0:
-            results.append({
-                "ip": ip,
-                "latency": lat,
-                "speed": speed,
-                "score": score,
-                "alias": alias
-            })
-
+    # 3. 按评分降序排序
     results_sorted = sorted(results, key=lambda x: -x["score"])
+    print(f"\n=== 测试完成 | 有效优质IP总数: {len(results_sorted)} ===", flush=True)
 
-    print(f"\n有效优质IP: {len(results_sorted)}", flush=True)
-
-    # 前10
+    # 4. 输出文件
+    # 主文件：前10个最优IP
     top_lines = [
-        f"{i['ip']}#【{i['alias']}·{i['speed']}Mbps·{i['latency']}ms】"
+        f"{i['ip']}#【{i['alias']}·{i['score']}分·{i['latency']}ms·{i['speed']}Mbps】"
         for i in results_sorted[:TOP_COUNT]
     ]
 
     with open("CloudflareSpeedTest.csv", "w", encoding="utf-8") as f:
         f.write("\n".join(top_lines))
 
-    # 全部
+    # 完整报告：全部测试结果
     with open("ip_test_report.csv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["IP", "延迟", "速度", "得分", "来源"])
+        w.writerow(["IP", "TCP延迟(ms)", "连通成功率", "速度(Mbps)", "综合评分", "来源"])
         for item in results_sorted:
             w.writerow([
                 item["ip"],
                 item["latency"],
+                f"{item['success_rate']*100:.0f}%",
                 item["speed"],
                 item["score"],
                 item["alias"]
             ])
 
-    print("\n✅ 完成！", flush=True)
-
-if __name__ == "__main__":
-    main()
+    # 最终结果打印
+    print("\n✅ 全部流程执行完成！")
+    print(f"📁 CloudflareSpeedTest.csv → 前{TOP_COUNT}个最优IP")
+    print(f"📁 ip_test_report.csv → 完整测试报告")
+    print("\n🏆 最优TOP3 IP:")
+    for idx, item in enumerate(results_sorted[:3], 1)
