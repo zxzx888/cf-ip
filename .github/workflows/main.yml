@@ -10,7 +10,7 @@ env:
 
 permissions:
   contents: write
-  actions: write  # 新增：授予操作 Actions 运行记录的权限
+  actions: write  # 必须添加：授予删除运行记录的权限
 
 jobs:
   update-ip-list:
@@ -62,32 +62,40 @@ jobs:
 
       - name: 🗑️ 删除1天前的Actions运行记录
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # 自动注入的令牌，需授予actions权限
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 安装 GitHub CLI（确保环境有gh）
-          type -p gh >/dev/null || (sudo apt update && sudo apt install gh -y)
+          # 安装GitHub CLI（确保版本足够新）
+          if ! type -p gh >/dev/null; then
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update && sudo apt install gh -y
+          fi
+
+          # 配置gh认证
+          gh auth setup-git > /dev/null 2>&1
           
-          # 配置gh使用当前令牌
-          gh auth setup-git
-          gh auth status
+          # 计算1天前的时间（ISO 8601格式，gh要求的标准格式）
+          ONE_DAY_AGO=$(date -d "1 day ago" +"%Y-%m-%dT%H:%M:%SZ")
+          echo "清理创建时间早于 $ONE_DAY_AGO 的运行记录"
           
-          # 获取1天前的时间戳（Unix时间，单位秒）
-          ONE_DAY_AGO=$(($(date +%s) - 86400))
-          
-          # 获取仓库所有运行记录，过滤出1天前的、当前工作流的运行ID
-          echo "开始清理1天前的Actions运行记录..."
+          # 关键修复：参数加引号，避免空格/特殊字符解析错误
           RUN_IDS=$(gh run list \
-            --workflow="main.yml" \  # 指定要清理的工作流文件名
-            --created="<$(date -d @"$ONE_DAY_AGO" +%Y-%m-%dT%H:%M:%SZ)" \
-            --json databaseId \
-            --jq '.[].databaseId')
+            --workflow="main.yml" \
+            --created="<${ONE_DAY_AGO}" \
+            --json=databaseId \
+            --limit=100 \
+            --jq '.[] | .databaseId')
           
-          # 遍历并删除符合条件的运行记录
+          # 遍历删除
           if [ -z "$RUN_IDS" ]; then
-            echo "没有找到1天前的运行记录，跳过删除"
+            echo "✅ 没有找到1天前的运行记录，无需清理"
           else
+            echo "🔍 找到需要删除的运行记录ID：$RUN_IDS"
             for RUN_ID in $RUN_IDS; do
-              echo "删除运行记录ID: $RUN_ID"
-              gh run delete "$RUN_ID" || echo "删除ID $RUN_ID 失败，跳过"
+              if gh run delete "$RUN_ID" --confirm; then
+                echo "✅ 成功删除运行记录ID: $RUN_ID"
+              else
+                echo "⚠️ 删除运行记录ID: $RUN_ID 失败（可能已被删除或权限不足）"
+              fi
             done
           fi
