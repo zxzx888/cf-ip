@@ -1,83 +1,37 @@
 name: Update IP List
 
 on:
-  workflow_dispatch:  # 只保留手动触发，方便测试
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  workflow_dispatch:  # 手动触发测试
 
 permissions:
-  actions: write  # 只需要删除权限
+  actions: write
+  contents: read
 
 jobs:
-  update-ip-list:
+  test-delete:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-
     steps:
-      # ==============================================
-      # 👇 👇 👇 以下是【全部注释掉】的原有任务
-      # ==============================================
-
-      # - name: 📥 拉取代码
-      #   uses: actions/checkout@v4
-      #   with:
-      #     ref: cf
-
-      # - name: 🐍 安装 Python
-      #   uses: actions/setup-python@v5
-      #   with:
-      #     python-version: '3.11'
-      #     cache: 'pip'
-
-      # - name: 📦 安装依赖
-      #   run: pip install requests
-
-      # - name: 🚀 运行测速
-      #   run: python collect_and_test_ips.py
-
-      # - name: 📤 上传结果
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: cf-results
-      #     path: ip_test_report.csv
-
-      # - name: 🔄 提交结果到 cf 分支
-      #   run: |
-      #     git config --local user.email "actions@github.com"
-      #     git config --local user.name "GitHub Action"
-      #     git add  ip_test_report.csv
-      #     if git diff --staged --quiet; then
-      #       echo "没有变化，跳过提交"
-      #       exit 0
-      #     fi
-      #     git commit -m "Auto update [$(TZ=Asia/Shanghai date '+%Y-%m-%d %H:%M')]"
-      #     git pull --rebase origin cf || true
-      #     git push origin HEAD:cf
+      # 必须拉取代码，否则 gh 找不到仓库
+      - uses: actions/checkout@v4
 
       # ==============================================
-      # 👇 👇 👇 只保留【删除旧运行记录】功能（测试专用）
+      # 👇 只测试删除功能
       # ==============================================
-
-      - name: 🗑️ 测试删除：清理1天前的Actions运行记录
+      - name: 🗑️ 测试删除 1 天前的 Actions 记录
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 安装 gh
-          if ! type -p gh >/dev/null; then
-            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/githubcli.list > /dev/null
-            sudo apt update && sudo apt install gh -y
-          fi
+          # 安装 GitHub CLI
+          type -p gh >/dev/null || (sudo apt update && sudo apt install gh -y)
 
           # 认证
-          gh auth setup-git > /dev/null 2>&1
-          
-          # 时间：1天前
-          ONE_DAY_AGO=$(date -d "1 day ago" +"%Y-%m-%dT%H:%M:%SZ")
-          echo "⏳ 清理早于：$ONE_DAY_AGO"
-          
-          # 获取要删除的运行ID
+          gh auth setup-git
+
+          # 1天前
+          ONE_DAY_AGO=$(date -d "1 day ago" +%Y-%m-%dT%H:%M:%SZ)
+          echo "清理早于：$ONE_DAY_AGO"
+
+          # 获取运行ID
           RUN_IDS=$(gh run list \
             --workflow "Update IP List" \
             --created "<$ONE_DAY_AGO" \
@@ -85,14 +39,12 @@ jobs:
             --limit 100 \
             --jq '.[].databaseId')
 
-          # 执行删除
+          # 删除
           if [ -n "$RUN_IDS" ]; then
-            echo "🔍 找到可删除记录：$RUN_IDS"
             for id in $RUN_IDS; do
-              echo "🗑️ 删除 ID：$id"
+              echo "删除：$id"
               gh run delete $id || true
             done
-            echo "✅ 删除任务完成"
           else
-            echo "✅ 没有需要删除的旧记录"
+            echo "无旧记录可删"
           fi
