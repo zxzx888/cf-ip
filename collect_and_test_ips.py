@@ -17,7 +17,7 @@ TEST_ROUNDS = 6
 
 URLS = [
     'https://ip.164746.xyz',
-    'https://cf.090227.xyz/ct?ips=10',
+    'https://cf.090227.xyz/ct',
     'https://cf.090227.xyz/CloudFlareYes',
     'https://www.wetest.vip/page/cloudflare/address_v4.html',
     'https://ipdb.api.030101.xyz/?type=bestcf',
