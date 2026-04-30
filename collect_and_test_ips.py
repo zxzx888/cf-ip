@@ -22,7 +22,7 @@ URLS = [
     'https://www.wetest.vip/page/cloudflare/address_v4.html',
     'https://ipdb.api.030101.xyz/?type=bestcf',
     'https://api.uouin.com/cloudflare.html',
-    'https://api.4ce.cn/api/bestCFIP'
+    'https://v2rayssr.com/cfip'
 ]
 
 ip_pattern = re.compile(r'\b(?:\d{1,3}\.){3}\d{1,3}\b')
