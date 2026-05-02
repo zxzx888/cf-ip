@@ -4,12 +4,7 @@ import time
 import random
 import socket
 import csv
-import json
-import subprocess
-import os
-import shutil
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
 # ====================== 核心配置 ======================
 THREADS = 10
@@ -18,15 +13,6 @@ MIN_SUCCESS_RATE = 1.0
 TEST_FILE_SIZE = 64 * 1024
 TIMEOUT = 3
 TEST_ROUNDS = 6
-# CloudflareST 配置
-CFST_TL = 200  # 延迟阈值(ms)
-CFST_SL = 5    # 速度阈值(MB/s)
-CFST_DN = 30   # 筛选数量
-CFST_BIN = "CloudflareST"
-# IP归属地查询配置
-IP_API_URL = "http://ip-api.com/json/{ip}?lang=zh-CN"
-LOC_TIMEOUT = 2
-LOC_SLEEP = 1
 # ======================================================
 
 URLS = [
@@ -65,114 +51,7 @@ def get_stable_average(test_list):
     mid = s[1:-1]
     return round(sum(mid)/len(mid),2), rate
 
-# ====================== CloudflareST 相关 ======================
-def download_cloudflarest():
-    """下载并解压 CloudflareST 工具"""
-    if os.path.exists(CFST_BIN):
-        print(f"✅ {CFST_BIN} 已存在，跳过下载")
-        return True
-    
-    url = "https://github.com/XIU2/CloudflareSpeedTest/releases/download/v2.2.5/CloudflareST_linux_amd64.tar.gz"
-    try:
-        print(f"📥 下载 {CFST_BIN}...")
-        resp = requests.get(url, timeout=30)
-        resp.raise_for_status()
-        
-        with open("CloudflareST.tar.gz", "wb") as f:
-            f.write(resp.content)
-        
-        # 解压
-        subprocess.run(["tar", "-zxf", "CloudflareST.tar.gz"], check=True)
-        os.chmod(CFST_BIN, 0o755)
-        print(f"✅ {CFST_BIN} 下载解压完成")
-        return True
-    except Exception as e:
-        print(f"❌ 下载 {CFST_BIN} 失败: {e}")
-        return False
-
-def run_cloudflarest(ip_list):
-    """运行 CloudflareST 测速"""
-    # 生成IP列表文件
-    with open("ip_list.txt", "w") as f:
-        f.write("\n".join(ip_list))
-    
-    # 运行 CloudflareST
-    cmd = [
-        f"./{CFST_BIN}",
-        "-tl", str(CFST_TL),
-        "-sl", str(CFST_SL),
-        "-dn", str(CFST_DN),
-        "-f", "ip_list.txt",
-        "-o", "result.csv"
-    ]
-    
-    print(f"\n🚀 开始 CloudflareST 测速，命令: {' '.join(cmd)}")
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        print(f"✅ CloudflareST 测速完成")
-        print(f"输出日志: {result.stdout}")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"❌ CloudflareST 执行失败: {e.stderr}")
-        return False
-
-# ====================== IP归属地查询 ======================
-def get_ip_location(ip):
-    """查询IP归属地，返回格式：国家代码+中文国家名"""
-    try:
-        url = IP_API_URL.format(ip=ip)
-        resp = requests.get(url, timeout=LOC_TIMEOUT)
-        resp.raise_for_status()
-        data = resp.json()
-        
-        if data.get("status") == "success":
-            country_code = data.get("countryCode", "")
-            country = data.get("country", "")
-            return f"{country_code}{country}"
-        return "未知地区"
-    except Exception as e:
-        print(f"❌ 查询IP {ip} 归属地失败: {e}")
-        return "未知地区"
-
-def process_results_to_ips_txt():
-    """处理 CloudflareST 结果，生成 ips.txt"""
-    ips_txt = Path("ips.txt")
-    ips_txt.write_text("")  # 清空文件
-    
-    # 读取 result.csv 并处理
-    try:
-        with open("result.csv", "r", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            next(reader)  # 跳过表头
-            rows = list(reader)[:CFST_DN]  # 取前N行
-        
-        print(f"\n📊 开始处理 {len(rows)} 个IP的归属地查询...")
-        with open(ips_txt, "a", encoding="utf-8") as f:
-            for row in rows:
-                if len(row) < 6:
-                    continue
-                
-                ip = row[0].strip()
-                ping = row[4].strip()  # 延迟列
-                if not valid_ip(ip):
-                    continue
-                
-                # 查询归属地
-                loc = get_ip_location(ip)
-                # 拼接格式: IP:443#国家代码国家名_延迟Xms
-                line = f"{ip}:443#{loc}_延迟{ping}ms\n"
-                f.write(line)
-                
-                print(f"✅ {ip} -> {loc} (延迟{ping}ms)")
-                time.sleep(LOC_SLEEP)  # 防止被封禁
-        
-        print(f"\n🏆 已生成 ips.txt，共 {len(rows)} 条记录")
-        return True
-    except Exception as e:
-        print(f"❌ 处理结果失败: {e}")
-        return False
-
-# ====================== 原有测试函数（保留） ======================
+# ====================== 测试 ======================
 def test_tcp(ip):
     res = []
     for _ in range(TEST_ROUNDS):
@@ -227,32 +106,16 @@ def collect_ips():
 
 # ====================== 主程序 ======================
 def main():
-    # 1. 采集IP
     ip_list = collect_ips()
     if not ip_list:
         print("❌ 未获取到有效IP，程序终止", flush=True)
         return
 
     random.shuffle(ip_list)
-    
-    # 2. 下载 CloudflareST
-    if not download_cloudflarest():
-        print("❌ CloudflareST 下载失败，无法继续测速")
-        return
-    
-    # 3. 运行 CloudflareST 测速
-    if not run_cloudflarest(ip_list):
-        print("❌ CloudflareST 测速失败")
-        return
-    
-    # 4. 处理结果并生成 ips.txt
-    if not process_results_to_ips_txt():
-        print("❌ 生成 ips.txt 失败")
-        return
-
-    # 5. 保留原有测试逻辑（可选，生成 ip_test_report.csv）
-    print(f"\n=== 开始原有并发测试 ===", flush=True)
     results = []
+
+    print(f"\n=== 开始并发测试 ===", flush=True)
+
     with ThreadPoolExecutor(THREADS) as pool:
         for ip in ip_list:
             print(f"\n📶 正在测试IP: {ip}", flush=True)
@@ -272,16 +135,13 @@ def main():
                     ip, http_lat, tcp_lat, speed, f"{int(rate*100)}%"
                 ])
 
-    # 生成原有格式的报告
     with open("ip_test_report.csv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
         w.writerow(["IP", "HTTP稳定延迟(ms)", "TCP稳定延迟(ms)", "下载速度(Mbps)", "连通成功率"])
         w.writerows(results)
 
-    print(f"\n🏆 所有任务完成")
-    print(f"✅ 有效可用IP（100%连通）: {len(results)}")
-    print(f"✅ 已生成报告：ip_test_report.csv")
-    print(f"✅ 已生成 ips.txt（包含归属地和延迟信息）")
+    print(f"\n🏆 测试完成 | 有效可用IP（100%连通）: {len(results)}", flush=True)
+    print("✅ 已生成报告：ip_test_report.csv", flush=True)
 
 if __name__ == "__main__":
     main()
