@@ -66,10 +66,9 @@ def download_cloudflarest():
         print(f"✅ cfst 已存在: {CLOUDFLAREST_PATH}", flush=True)
         return True
     try:
-        print("📥 正在下载 cfst v2.3.5 arm64...", flush=True)
+        print("📥 正在下载 cfst v2.3.5 amd64...", flush=True)
         
-        # 你提供的最新地址
-        url = "https://github.com/XIU2/CloudflareSpeedTest/releases/download/v2.3.5/cfst_linux_arm64.tar.gz"
+        url = "https://github.com/XIU2/CloudflareSpeedTest/releases/download/v2.3.5/cfst_linux_amd64.tar.gz"
         tar_file = tempfile.mktemp(suffix=".tar.gz")
         
         r = requests.get(url, timeout=30)
