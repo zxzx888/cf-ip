@@ -20,6 +20,7 @@ URLS = [
     'https://cf.090227.xyz/ct',
     'https://www.wetest.vip/page/cloudflare/address_v4.html',
     'https://api.uouin.com/cloudflare.html',
+    'https://api.4ce.cn/api/bestCFIP',
     'https://v2rayssr.com/cfip'
 ]
 
