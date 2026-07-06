@@ -16,6 +16,7 @@ TEST_ROUNDS = 6
 # ======================================================
 
 URLS = [
+    'https://cf.6610000.xyz/api/public/latest',
     'https://ip.164746.xyz',
     'https://cf.090227.xyz/ct',
     'https://www.wetest.vip/page/cloudflare/address_v4.html',
