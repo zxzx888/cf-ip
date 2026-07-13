@@ -41,14 +41,13 @@ jobs:
           name: cf-results
           path: |
              ip_test_report.csv
-             ip_list.txt
 
       - name: 提交结果到 cf 分支
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Action"
 
-          git add ip_test_report.csv ip_list.txt
+          git add ip_test_report.csv
 
           if git diff --staged --quiet; then
             echo "没有变化，跳过提交"
