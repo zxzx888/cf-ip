@@ -18,36 +18,37 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: 📥 拉取代码
+      - name: 拉取代码
         uses: actions/checkout@v4
         with:
           ref: cf
 
-      - name: 🐍 安装 Python
+      - name: 安装 Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: 📦 安装依赖
+      - name: 安装依赖
         run: pip install requests
 
-      - name: 🚀 运行测速
+      - name: 运行测速
         run: python collect_and_test_ips.py
 
-      - name: 📤 上传结果（可下载）
+      - name: 上传结果（可下载）
         uses: actions/upload-artifact@v4
         with:
           name: cf-results
           path: |
              ip_test_report.csv
+             ip_list.txt
 
-      - name: 🔄 提交结果到 cf 分支
+      - name: 提交结果到 cf 分支
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Action"
 
-          git add  ip_test_report.csv
+          git add ip_test_report.csv ip_list.txt
 
           if git diff --staged --quiet; then
             echo "没有变化，跳过提交"
@@ -58,7 +59,7 @@ jobs:
           git pull --rebase origin cf || true
           git push origin HEAD:cf
 
-      - name: 🗑️ 自动清理1天前的Actions运行记录
+      - name: 自动清理1天前的Actions运行记录
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
