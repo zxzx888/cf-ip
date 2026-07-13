@@ -5,7 +5,10 @@ import random
 import socket
 import csv
 import json
+import urllib3
 from concurrent.futures import ThreadPoolExecutor
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ====================== 核心配置 ======================
 THREADS = 10
@@ -282,20 +285,51 @@ def test_speed(ip):
         return 0.0
 
 # ====================== 采集IP ======================
+def fetch_with_retry(url, max_retries=2):
+    """带重试 + SSL容错 + UA 的 HTTP GET"""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                       "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    }
+    for attempt in range(max_retries + 1):
+        try:
+            # 第一次正常请求, 失败则降级关闭SSL验证
+            verify = True if attempt == 0 else False
+            r = requests.get(url, headers=headers, timeout=15, verify=verify)
+            r.encoding = r.apparent_encoding or 'utf-8'
+            return r
+        except requests.exceptions.SSLError:
+            if attempt < max_retries:
+                print(f"  SSL错误, 重试({attempt+1}/{max_retries}) 关闭证书验证...", flush=True)
+                continue
+            raise
+        except Exception:
+            if attempt < max_retries:
+                print(f"  连接失败, 重试({attempt+1}/{max_retries})...", flush=True)
+                time.sleep(1)
+                continue
+            raise
+    return None
+
 def collect_ips():
     ipset = set()
     print("\n=== 开始全量采集IP（无单源数量限制） ===", flush=True)
     for url in URLS:
         try:
             print(f"抓取: {url}", flush=True)
-            r = requests.get(url, timeout=10)
+            r = fetch_with_retry(url)
+            if r is None:
+                print(f"  抓取失败: 多次重试后仍无法连接", flush=True)
+                continue
             raw_ips = ip_pattern.findall(r.text)
             valid_ips = [valid_ip(ip) for ip in raw_ips if valid_ip(ip)]
             for ip in valid_ips:
                 ipset.add(ip)
             print(f"  原始提取: {len(raw_ips)} | 有效IP: {len(valid_ips)} | 累计去重: {len(ipset)}", flush=True)
         except Exception as e:
-            print(f"  抓取失败: {str(e)[:40]}", flush=True)
+            print(f"  抓取失败: {str(e)[:60]}", flush=True)
     print(f"全量采集完成 | 总有效去重IP: {len(ipset)}", flush=True)
     return list(ipset)
 
@@ -345,38 +379,21 @@ def main():
                     geo.get('isp', ''),
                 ])
 
-    # ---- 写CSV ----
+    # ---- 写CSV (4列: IP 地区 延迟 速度) ----
+    # 格式: 172.64.144.138, HK, 20.25ms, 5.86MB/s
+    # 速度从 Mbps 转换为 MB/s (1 byte = 8 bits, MB/s = Mbps / 8)
     with open("ip_test_report.csv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow([
-            "IP",
-            "HTTP稳定延迟(ms)",
-            "TCP稳定延迟(ms)",
-            "下载速度(Mbps)",
-            "连通成功率",
-            "CF边缘机房",         # colo IATA代码 (从Runner视角)
-            "CF边缘机房位置",     # IATA代码对应城市
-            "IP注册国家",         # ip-api.com 查询结果
-            "IP注册地区",
-            "IP注册城市",
-            "ISP",
-        ])
-        w.writerows(results)
-
-    # ---- 写格式化IP列表 (city + 延迟 + 速度) ----
-    # 格式: HK 10.75ms 14.11MB/s
-    # 速度从 Mbps 转换为 MB/s (1 byte = 8 bits, MB/s = Mbps / 8)
-    with open("ip_list.txt", "w", encoding="utf-8") as f:
+        w.writerow(["IP", "地区", "延迟", "速度"])
         for row in results:
             ip, http_lat, tcp_lat, speed_mbps, rate_str, \
                 colo, colo_city, geo_country, geo_region, geo_city, isp = row
             city = get_city_abbr(colo, colo_city, geo_city)
             speed_mbs = round(speed_mbps / 8, 2)
-            f.write(f"{city} {http_lat}ms {speed_mbs}MB/s\n")
+            w.writerow([ip, city, f"{http_lat}ms", f"{speed_mbs}MB/s"])
 
     print(f"\n测试完成 | 有效可用IP（100%连通）: {len(results)}", flush=True)
     print("已生成报告：ip_test_report.csv", flush=True)
-    print("已生成列表：ip_list.txt", flush=True)
 
 if __name__ == "__main__":
     main()
