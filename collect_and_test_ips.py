@@ -210,7 +210,7 @@ def run_collect():
         w = csv.writer(f)
         w.writerow(["IP地址", "端口", "数据中心"])
         for ip, port, cc, lat, speed in results:
-            w.writerow([ip, port, f"{cc} {lat}ms {speed}Mbps"])
+            w.writerow([ip, port, f"[{cc}] {lat}ms {speed}Mbps"])
 
     print(f"\n测试完成 | 有效可用IP: {len(results)}", flush=True)
     print("已生成报告：ip_test_report.csv", flush=True)
