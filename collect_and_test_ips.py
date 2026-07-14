@@ -147,9 +147,14 @@ def collect_ips():
     out = {}
 
     def add(ip, colo, port=443):
+        # 去重, 但任一源提供了 colo 就补全(与源顺序无关, 尽量保留已知colo)
         ip = valid_ip(ip)
-        if ip and ip not in out:
+        if not ip:
+            return
+        if ip not in out:
             out[ip] = {'ip': ip, 'port': port, 'colo': colo}
+        elif colo and not out[ip]['colo']:
+            out[ip]['colo'] = colo
 
     # 主源 6610000 (JSON, 带 colo)
     try:
@@ -181,6 +186,20 @@ def collect_ips():
             pass
 
     print(f"  去重IP总数: {len(out)}", flush=True)
+
+    # 同段(/16, 前2段)内任一 IP 有 colo, 整段沿用; 整段都无则留空(后续 US 兜底)
+    seg = {}
+    for r in out.values():
+        if r['colo']:
+            seg.setdefault('.'.join(r['ip'].split('.')[:2]), r['colo'])
+    filled = 0
+    for r in out.values():
+        if not r['colo']:
+            r['colo'] = seg.get('.'.join(r['ip'].split('.')[:2]), '')
+        if r['colo']:
+            filled += 1
+    print(f"  段传播后带colo: {filled}/{len(out)}", flush=True)
+
     return list(out.values())
 
 
