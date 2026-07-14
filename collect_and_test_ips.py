@@ -379,18 +379,17 @@ def main():
                     geo.get('isp', ''),
                 ])
 
-    # ---- 写CSV (4列: IP 地区 延迟 速度) ----
-    # 格式: 172.64.144.138, HK, 20.25ms, 5.86MB/s
-    # 速度从 Mbps 转换为 MB/s (1 byte = 8 bits, MB/s = Mbps / 8)
+    # ---- 写CSV (3列: IP地址 端口 数据中心) ----
+
     with open("ip_test_report.csv", "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
-        w.writerow(["IP", "地区", "延迟", "速度"])
+        w.writerow(["IP地址", "端口", "数据中心"])
         for row in results:
             ip, http_lat, tcp_lat, speed_mbps, rate_str, \
                 colo, colo_city, geo_country, geo_region, geo_city, isp = row
             city = get_city_abbr(colo, colo_city, geo_city)
-            speed_mbs = round(speed_mbps / 8, 2)
-            w.writerow([ip, city, f"{http_lat}ms", f"{speed_mbs}MB/s"])
+            remark = f"{city} {http_lat}ms {speed_mbps}Mbps"
+            w.writerow([ip, 443, remark])
 
     print(f"\n测试完成 | 有效可用IP（100%连通）: {len(results)}", flush=True)
     print("已生成报告：ip_test_report.csv", flush=True)
